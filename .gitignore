@@ -1,0 +1,21 @@
+node_modules
+.venv
+dist
+.DS_Store
+
+rdumap/static
+rdumap/data
+data
+
+# Python
+__pycache__
+.ipynb_checkpoints
+
+
+
+
+*.npy
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb

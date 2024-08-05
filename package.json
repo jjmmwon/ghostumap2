@@ -1,0 +1,22 @@
+{
+	"scripts": {
+		"dev": "npm run build -- --sourcemap=inline --watch",
+		"build": "esbuild widget/widget.ts --minify --format=esm --bundle --outdir=rdumap/static",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@picocss/pico": "^2.0.6",
+		"@types/bootstrap": "^5.2.10",
+		"@types/d3": "^7.4.3",
+		"bootstrap": "5.3.3",
+		"d3": "^7.9.0",
+		"lit": "^3.1.4",
+		"lit-html": "^3.1.4"
+	},
+	"devDependencies": {
+		"@anywidget/types": "^0.1.9",
+		"esbuild": "^0.23.0",
+		"ts-lit-plugin": "^2.0.2",
+		"typescript": "^5.5.3"
+	}
+}

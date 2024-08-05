@@ -1,0 +1,1 @@
+export { getScales } from "./scales";
