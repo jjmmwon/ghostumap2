@@ -9,11 +9,17 @@
   padding: 20px;
 }
 
+
+
+
+
 .projection {
   width: 100%;
-  max-width: 600px;
-  padding: 20px;
-  box-sizing: border-box;
+  padding: 5px;
+}
+
+.legend {
+  padding: 5px;
 }
 
 

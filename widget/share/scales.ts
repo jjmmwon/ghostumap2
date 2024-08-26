@@ -1,12 +1,13 @@
 import * as d3 from "d3";
-import type { IOriginalPoint, IScales } from "@/model";
+import type { IOriginalPoint, IScale } from "@/model";
 
 export const getScales = (
   origEmb: IOriginalPoint[],
   width: number,
   height: number,
-  distance: number
-): IScales => {
+  legend: string[],
+  colors: { [key: string]: string }
+): IScale => {
   const [xMin, xMax] = d3.extent(origEmb, (d) => d.x) as [number, number];
   const [yMin, yMax] = d3.extent(origEmb, (d) => d.y) as [number, number];
 
@@ -19,11 +20,24 @@ export const getScales = (
     .domain([yMin * 1.1, yMax * 1.1])
     .range([height, 0]);
 
-  const colorScale = d3
-    .scaleOrdinal(d3.schemeTableau10)
-    .domain(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+  let colorScale: { [key: string]: string } = {};
 
-  const scaledDist = distance * (d3.max([xMax - xMin, yMax - yMin]) as number);
+  if (legend.length === 0 && Object.keys(colors).length === 0) {
+    colorScale["None"] = d3.schemeTableau10[0];
+  } else if (!legend.length) {
+    colorScale = colors;
+  } else {
+    legend.forEach((d, i) => {
+      colorScale[d] = d3.schemeTableau10[i];
+    });
+  }
 
-  return { xScale, yScale, colorScale, scaledDist };
+  const range = {
+    xMin: xMin,
+    xMax: xMax,
+    yMin: yMin,
+    yMax: yMax,
+  };
+
+  return { xScale, yScale, colorScale, range };
 };
