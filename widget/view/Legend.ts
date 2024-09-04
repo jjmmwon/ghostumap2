@@ -99,20 +99,13 @@ class Legend {
       .attr("font-size", "16px");
   }
 
-  render(model: AnyModel<IWidget>) {
-    const embeddingID = model.get("embedding_id");
-
-    const legend = model.get("embedding_set")[embeddingID]?.legend;
-    const colors = model.get("embedding_set")[embeddingID]?.colors;
-
+  render(legend: string[], colors: { [key: string]: string }) {
     this.renderSymbolLegend();
     this.renderLabelLegend(legend, colors);
     return this.svg.node();
   }
-  update(model: AnyModel<IWidget>) {
-    const embeddingID = model.get("embedding_id");
-    const legend = model.get("embedding_set")[embeddingID].legend;
-    const colors = model.get("embedding_set")[embeddingID].colors;
+
+  update(legend: string[], colors: { [key: string]: string }) {
     this.renderLabelLegend(legend, colors);
   }
 }

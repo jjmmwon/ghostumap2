@@ -1,4 +1,4 @@
-import { IWidget } from "@/model";
+import { IOriginalPoint, IWidget } from "@/model";
 import { AnyModel } from "@anywidget/types";
 import { html, render as litRender } from "lit-html";
 import { styleMap } from "lit-html/directives/style-map.js";
@@ -25,24 +25,35 @@ export default class UnstableContainer {
     this.unstableIDList = new UnstableIDList();
   }
 
-  update(model: AnyModel<IWidget>): void {
-    this.unstableCounter.update(model);
-    this.unstableIDList.update(model);
+  update(
+    unstEmb: IOriginalPoint[],
+    numUnstables: number,
+    percentUnstables: number,
+    getUnstList: () => number[],
+    updateUnstList: (idList: number[]) => void
+  ): void {
+    this.unstableCounter.update(numUnstables, percentUnstables);
+    this.unstableIDList.update(unstEmb, getUnstList, updateUnstList);
   }
 
-  updateCheckbox(model: AnyModel<IWidget>): void {
-    const idList = model.get("checkedUnstables") || [];
+  updateCheckbox(idList: number[]): void {
     this.unstableIDList.updateCheckbox(idList);
   }
 
-  render(model: AnyModel<IWidget>): HTMLDivElement {
+  render(
+    unstEmb: IOriginalPoint[],
+    numUnstables: number,
+    percentUnstables: number,
+    getUnstList: () => number[],
+    updateUnstList: (idList: number[]) => void
+  ): HTMLDivElement {
     const template = html`
       <div style=${styleMap(titleStyle)}>Unstables</div>
       <div style=${styleMap(componentStyle)}>
-        ${this.unstableCounter.render(model)}
+        ${this.unstableCounter.render(numUnstables, percentUnstables)}
       </div>
       <div style=${styleMap(componentStyle)}>
-        ${this.unstableIDList.render(model)}
+        ${this.unstableIDList.render(unstEmb, getUnstList, updateUnstList)}
       </div>
     `;
 

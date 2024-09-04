@@ -35,12 +35,13 @@ class Settings {
 
     this.selector = new Selector();
     this.sliders = [
-      new Slider("distance", "Distance", 0, 1, 0.01),
-      new Slider("sensitivity", "Sensitivity", 0, 1, 0.01),
+      new Slider("distance", "Distance", 0.01, 1, 0.01),
+      new Slider("sensitivity", "Sensitivity", 0.01, 1, 0.01),
     ];
     this.checkboxes = [
-      new Checkbox("show_neighbors", "Show Neighbors"),
-      new Checkbox("show_ghosts", "Show Ghosts"),
+      new Checkbox("show_unstables", "Unstables"),
+      new Checkbox("show_neighbors", "Neighbors"),
+      new Checkbox("show_ghosts", "Ghosts"),
     ];
   }
 
@@ -51,7 +52,9 @@ class Settings {
       d3.select("#" + id).attr("value", value.toString());
       d3.select("#" + id + "-value").text(value.toFixed(2));
     }
-    if (["show_neighbors", "show_ghosts"].includes(id as string)) {
+    if (
+      ["show_neighbors", "show_ghosts", "show_unstables"].includes(id as string)
+    ) {
       d3.select("#" + id).attr("checked", value);
     }
   }

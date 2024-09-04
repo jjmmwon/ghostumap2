@@ -5,7 +5,7 @@ import { styleMap } from "lit-html/directives/style-map.js";
 import * as d3 from "d3";
 
 const containerStyle = {
-  height: "200px", // Limit the height to make it scrollable
+  height: "200px",
   "max-width": "200px",
   "overflow-y": "auto",
   border: "1px solid #ccc",
@@ -28,20 +28,23 @@ class UnstableIDList {
     this.container = document.createElement("div");
   }
 
-  onClick(model: AnyModel<IWidget>, id: number, checked: boolean): void {
-    const checkedUnstables = model.get("checkedUnstables") || [];
-
-    model.set(
-      "checkedUnstables",
+  onClick(
+    id: number,
+    checked: boolean,
+    getUnstList: () => number[],
+    updateUnstList: (idList: number[]) => void
+  ): void {
+    const checkedUnstables = getUnstList();
+    updateUnstList(
       checked
         ? [...checkedUnstables, id]
         : checkedUnstables.filter((d) => d !== id)
     );
-    model.save_changes();
   }
 
   updateCheckbox(idList: number[]): void {
     console.log("updateCheckbox", idList);
+
     d3.selectAll(".unstable-list input").property("checked", false);
     idList.forEach((id) => {
       d3.select(`#unstable-${id}`).property("checked", true);
@@ -52,30 +55,34 @@ class UnstableIDList {
     d3.selectAll(".unstable-list input").property("checked", false);
   }
 
-  update(model: AnyModel<IWidget>): void {
-    const unstableEmb = model.get("unstableInfo")?.unstableEmb || [];
-    const unstableIds = unstableEmb.map((d: IOriginalPoint) => d.id);
+  update(
+    unstEmb: IOriginalPoint[],
+    getUnstList: () => number[],
+    updateUnstList: (idList: number[]) => void
+  ): void {
+    const sortedUnstEmb = unstEmb.sort((a, b) => b.instability - a.instability);
 
     const template = html`
       <div class="unstable-list" style=${styleMap(containerStyle)}>
-        ${unstableIds.length
-          ? unstableIds.map(
-              (id) => html`
+        ${sortedUnstEmb.length
+          ? sortedUnstEmb.map(
+              (d) => html`
                 <div style=${styleMap(itemStyle)}>
                   <input
                     type="checkbox"
-                    id="unstable-${id}"
-                    name="unstable-${id}"
+                    id="unstable-${d.id}"
+                    name="unstable-${d.id}"
                     @click=${(e: Event) =>
                       this.onClick(
-                        model,
-                        id,
-                        (e.target as HTMLInputElement).checked
+                        d.id,
+                        (e.target as HTMLInputElement).checked,
+                        getUnstList,
+                        updateUnstList
                       )}
                   />
-                  <label for="unstable-${id}" style="margin-left: 5px;"
-                    >${id}</label
-                  >
+                  <label for="unstable-${d.id}" style="margin-left: 5px;"
+                    >${d.id} (INS: ${d.instability.toFixed(2)})
+                  </label>
                 </div>
               `
             )
@@ -86,8 +93,12 @@ class UnstableIDList {
     litRender(template, this.container);
   }
 
-  render(model: AnyModel<IWidget>): HTMLDivElement {
-    this.update(model);
+  render(
+    unstEmb: IOriginalPoint[],
+    getUnstList: () => number[],
+    updateUnstList: (idList: number[]) => void
+  ): HTMLDivElement {
+    this.update(unstEmb, getUnstList, updateUnstList);
 
     return this.container;
   }

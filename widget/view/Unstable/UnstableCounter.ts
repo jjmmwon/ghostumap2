@@ -1,5 +1,3 @@
-import { IWidget } from "@/model";
-import { AnyModel } from "@anywidget/types";
 import { html, render as litRender } from "lit-html";
 
 class UnstableCounter {
@@ -9,10 +7,7 @@ class UnstableCounter {
     this.container = document.createElement("div");
   }
 
-  update(model: AnyModel<IWidget>): void {
-    const numUnstables = model.get("unstableInfo")?.numUnstables || 0;
-    const percentUnstables = model.get("unstableInfo")?.percentUnstables || 0;
-
+  update(numUnstables: number, percentUnstables: number): void {
     const template = html`
       <div id="unstableInfo">
         Number of Unstables: ${numUnstables || 0}
@@ -23,8 +18,8 @@ class UnstableCounter {
     litRender(template, this.container);
   }
 
-  render(model: AnyModel<IWidget>): HTMLDivElement {
-    this.update(model);
+  render(numUnstables: number, percentUnstables: number): HTMLDivElement {
+    this.update(numUnstables, percentUnstables);
     return this.container;
   }
 }

@@ -1,6 +1,6 @@
-import type { IWidget } from "@/model";
+import type { IGhostPoint, IOriginalPoint, IScale, IWidget } from "@/model";
 import { AnyModel } from "@anywidget/types";
-import { processData } from "@/share";
+import { prepareEmbeddingInfo } from "@/utils";
 
 import * as d3 from "d3";
 
@@ -8,6 +8,8 @@ import OriginalEmbedding from "./OriginalEmbedding";
 import GhostEmbedding from "./GhostEmbedding";
 import UnstableEmbedding from "./UnstableEmbedding";
 import NeighborEmbedding from "./NeighborEmbedding";
+
+type VisibilityOption = "neighbors" | "ghosts" | "unstables";
 
 class Scatterplot {
   private svg: d3.Selection<SVGSVGElement, undefined, null, undefined>;
@@ -47,34 +49,26 @@ class Scatterplot {
       .attr("transform", "translate(0,0) scale(1)");
   }
 
-  private resetView(model: AnyModel<IWidget>) {
-    console.log("resetView");
-    this.updateUnstList(model, []);
-    this.unstableEmbedding.resetView();
-  }
-
-  private updateUnstList(model: AnyModel<IWidget>, idList: number[]) {
-    model.set("checkedUnstables", idList);
-    model.save_changes();
-  }
-
-  update(model: AnyModel<IWidget>) {
-    const { origEmb, unstEmb, scales } = processData(
-      model,
-      this.width,
-      this.height
-    );
-    this.resetView(model);
-
+  updateEmbedding(
+    origEmb: IOriginalPoint[],
+    unstEmb: IOriginalPoint[],
+    scales: IScale,
+    updaetUnstList: (id: number[]) => void
+  ) {
     this.originalEmbedding.render(origEmb, scales);
     this.unstableEmbedding.render(unstEmb, scales, (id: number) => {
-      this.updateUnstList(model, [id]);
+      updaetUnstList([id]);
     });
   }
 
-  render(model: AnyModel<IWidget>) {
-    this.update(model);
-    this.svg.on("click", () => this.resetView(model));
+  render(
+    origEmb: IOriginalPoint[],
+    unstEmb: IOriginalPoint[],
+    scales: IScale,
+    updateUnstList: (id: number[]) => void
+  ) {
+    this.updateEmbedding(origEmb, unstEmb, scales, updateUnstList);
+    this.svg.on("click", () => updateUnstList([]));
 
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
@@ -96,46 +90,64 @@ class Scatterplot {
     return this.svg.node();
   }
 
-  updateUnstEmbedding(model: AnyModel<IWidget>) {
-    const { unstEmb, scales } = processData(model, this.width, this.height);
-    this.resetView(model);
-    this.unstableEmbedding.render(unstEmb, scales, (id: number) => {
-      this.updateUnstList(model, [id]);
-    });
-  }
-
-  setDetailVisibility(
-    show_unstables: boolean,
-    show_ghosts: boolean,
-    show_neighbors: boolean
+  updateUnstEmbedding(
+    unstEmb: IOriginalPoint[],
+    scales: IScale,
+    updateUnstList: (id: number[]) => void
   ) {
-    d3.selectAll(".unstableEmbedding").attr(
-      "visibility",
-      show_unstables ? "visible" : "hidden"
-    );
-
-    d3.selectAll(".neighborEmbedding").attr(
-      "visibility",
-      show_neighbors ? "visible" : "hidden"
-    );
-
-    d3.selectAll(".ghostEmbedding").attr(
-      "visibility",
-      show_ghosts ? "visible" : "hidden"
-    );
+    // this.resetUnstList(model);
+    this.unstableEmbedding.render(unstEmb, scales, (id: number) => {
+      updateUnstList([id]);
+    });
+    this.originalEmbedding.updateUnstEmbedding(unstEmb);
   }
 
-  updateDetail(model: AnyModel<IWidget>) {
-    const { origEmb, ghostEmb, scales } = processData(
-      model,
-      this.width,
-      this.height
-    );
-    const unstableList = model.get("checkedUnstables");
+  setVisibility(
+    options: VisibilityOption,
+    show: boolean,
+    unstEmb: IOriginalPoint[] = []
+  ) {
+    switch (options) {
+      case "neighbors":
+        this.neighborEmbedding.setVisibility(show);
+        break;
+      case "ghosts":
+        this.ghostEmbedding.setVisibility(show);
+        break;
+      case "unstables":
+        this.originalEmbedding.setVisibility(show, unstEmb);
+        this.unstableEmbedding.setVisibility(show);
+        break;
+    }
+  }
 
+  updateDetail(
+    origEmb: IOriginalPoint[],
+    ghostEmb: IGhostPoint[],
+    scales: IScale,
+    unstableList: number[]
+  ) {
     this.ghostEmbedding.render(ghostEmb, scales, unstableList);
     this.neighborEmbedding.render(origEmb, scales, unstableList);
-    this.unstableEmbedding.update(unstableList);
+    this.unstableEmbedding.render(
+      origEmb.filter((d) => unstableList.includes(d.id)),
+      scales,
+      (_: number) => {
+        return;
+      }
+    );
+  }
+
+  resetDetail(
+    unstEmb: IOriginalPoint[],
+    scales: IScale,
+    updaetUnstList: (id: number[]) => void
+  ) {
+    this.ghostEmbedding.reset();
+    this.neighborEmbedding.reset();
+    this.unstableEmbedding.render(unstEmb, scales, (id: number) => {
+      updaetUnstList([id]);
+    });
   }
 }
 

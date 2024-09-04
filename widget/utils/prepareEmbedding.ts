@@ -1,31 +1,11 @@
 import * as d3 from "d3";
-import type { IOriginalPoint, IWidget } from "@/model";
+import type { IWidget } from "@/model";
 import { AnyModel } from "@anywidget/types";
 import { getScales } from "./scales";
 
-const updateUnstableInfo = (
-  model: AnyModel<IWidget>,
-  unstEmb: IOriginalPoint[],
-  totalPoints: number
-) => {
-  const unstableInfo = { ...model.get("unstableInfo") };
-
-  unstableInfo.unstableEmb = unstEmb;
-  unstableInfo.numUnstables = unstEmb.length;
-  unstableInfo.percentUnstables = (unstEmb.length / totalPoints) * 100;
-
-  model.set("unstableInfo", unstableInfo);
-  model.save_changes();
-
-  return unstEmb;
-};
-
-export const processData = (
-  model: AnyModel<IWidget>,
-  width: number = 0,
-  height: number = 0
-) => {
+export const prepareEmbeddingInfo = (model: AnyModel<IWidget>) => {
   const embeddingID = model.get("embedding_id");
+  const [width, height] = [model.get("width"), model.get("height")];
   const {
     original_embedding: origEmb,
     ghost_embedding: ghostEmb,
@@ -40,14 +20,13 @@ export const processData = (
   const distance = model.get("distance");
   const sensitivity = model.get("sensitivity");
 
-  const scaledSens = Math.floor(sensitivity * nGhosts);
+  const scaledSens = Math.floor(sensitivity * (nGhosts - 1));
   const scaledDist =
     distance *
     (d3.max([range.xMax - range.xMin, range.yMax - range.yMin]) as number);
 
+  console.log(scaledSens, scaledDist);
   const unstEmb = origEmb.filter((d) => d.radii[scaledSens] > scaledDist);
-  updateUnstableInfo(model, unstEmb, origEmb.length);
-  console.log(model.get("unstableInfo"));
 
   return {
     origEmb,
@@ -57,5 +36,7 @@ export const processData = (
     range,
     scaledDist,
     scaledSens,
+    legend,
+    colors,
   };
 };

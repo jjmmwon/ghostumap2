@@ -1,5 +1,5 @@
 import type { IScale, IOriginalPoint } from "@/model";
-import { arrayDifference } from "@/share";
+import { arrayDifference } from "@/utils";
 import * as d3 from "d3";
 
 class NeighborEmbedding {
@@ -10,7 +10,11 @@ class NeighborEmbedding {
     this.group = parent.append("g").attr("class", "neighborEmbedding");
   }
 
-  renderNeighbors(id: number, origEmb: IOriginalPoint[], scales: IScale) {
+  private renderNeighbors(
+    id: number,
+    origEmb: IOriginalPoint[],
+    scales: IScale
+  ) {
     const { xScale, yScale, colorScale } = scales;
     const points = origEmb[id].neighbors.map((d) => origEmb[d]);
 
@@ -27,8 +31,18 @@ class NeighborEmbedding {
       .attr("fill", (d) => colorScale[d.label])
       .attr("stroke", "black");
   }
-  removeNeighbors(id: number) {
+
+  private removeNeighbors(id: number) {
     this.group.selectAll(`#neighbor-${id}`).remove();
+  }
+
+  reset() {
+    this.group.selectAll("g").remove();
+    this.unstableList = [];
+  }
+
+  setVisibility(show: boolean) {
+    this.group.attr("visibility", show ? "visible" : "hidden");
   }
 
   render(origEmb: IOriginalPoint[], scales: IScale, unstableList: number[]) {

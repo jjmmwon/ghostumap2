@@ -1,5 +1,5 @@
 import type { IScale, IGhostPoint } from "@/model";
-import { arrayDifference } from "@/share";
+import { arrayDifference } from "@/utils";
 import * as d3 from "d3";
 
 class GhostEmbedding {
@@ -33,6 +33,15 @@ class GhostEmbedding {
 
   removeGhosts(id: number) {
     this.group.selectAll(`#ghost-${id}`).remove();
+  }
+
+  reset() {
+    this.group.selectAll("g").remove();
+    this.unstableList = [];
+  }
+
+  setVisibility(show: boolean) {
+    this.group.attr("visibility", show ? "visible" : "hidden");
   }
 
   render(ghostEmb: IGhostPoint[], scales: IScale, unstableList: number[]) {

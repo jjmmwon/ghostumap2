@@ -3,6 +3,7 @@ import * as d3 from "d3";
 
 class OriginalEmbedding {
   private group: d3.Selection<SVGGElement, undefined, null, undefined>;
+  private showUnst: boolean = true;
 
   constructor(parent: d3.Selection<SVGGElement, undefined, null, undefined>) {
     this.group = parent.append("g").attr("class", "originalEmbedding");
@@ -19,6 +20,31 @@ class OriginalEmbedding {
       .attr("r", 1)
       .attr("fill", (d) => scales.colorScale[d.label])
       .attr("id", (d) => `circle-${d.id.toString()}`);
+  }
+
+  setVisibility(show: boolean, unstEmb: IOriginalPoint[]) {
+    console.log("setVisibility", show);
+    this.showUnst = show;
+    if (this.showUnst) {
+      this.group.selectAll("circle").attr("visibility", "visible");
+      return;
+    }
+    unstEmb.forEach((d) => {
+      this.group
+        .selectAll(`circle[id="circle-${d.id.toString()}"]`)
+        .attr("visibility", "hidden");
+    });
+  }
+
+  updateUnstEmbedding(unstEmb: IOriginalPoint[]) {
+    this.group.selectAll("circle").attr("visibility", "visible");
+    if (!this.showUnst) {
+      unstEmb.forEach((id) => {
+        this.group
+          .selectAll(`circle[id="circle-${id.toString()}"]`)
+          .attr("visibility", "hidden");
+      });
+    }
   }
 }
 
