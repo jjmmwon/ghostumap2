@@ -21,6 +21,7 @@ export const prepareEmbeddingInfo = (model: AnyModel<IWidget>) => {
   const sensitivity = model.get("sensitivity");
 
   const scaledSens = Math.floor(sensitivity * (nGhosts - 1));
+  console.log(scaledSens);
   const scaledDist =
     distance *
     (d3.max([range.xMax - range.xMin, range.yMax - range.yMin]) as number);

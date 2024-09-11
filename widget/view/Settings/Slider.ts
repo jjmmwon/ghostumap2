@@ -37,7 +37,7 @@ class Slider {
           max="${this.max}"
           step="${this.step}"
           .value="${typeof value === "number" ? value : 0}"
-          @input="${(e: Event) => {
+          @change="${(e: Event) => {
             model.set(this.id, +(e.target as HTMLInputElement).value);
             model.save_changes();
           }}"

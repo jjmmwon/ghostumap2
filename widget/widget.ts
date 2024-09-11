@@ -7,16 +7,19 @@ import {
   UnstableContainer,
   Histogram,
 } from "@/view";
+import { prepareEmbeddingInfo, updateUnstInfo } from "@/utils";
+
 import { html, render } from "lit-html";
 import { styleMap } from "lit-html/directives/style-map.js";
+
 import {
   widgetStyle,
   leftStyle,
   scatterplotStyle,
   projectionStyle,
   legendStyle,
-} from "./widgetStyles";
-import { prepareEmbeddingInfo, updateUnstInfo } from "./utils";
+} from "@/widgetStyles";
+import { attachModelListener } from "@/eventHandler";
 
 function renderWidget({ model, el }: RenderProps<IWidget>) {
   const widget = document.createElement("div");
@@ -74,104 +77,14 @@ function renderWidget({ model, el }: RenderProps<IWidget>) {
     widget
   );
 
-  model.on("change:embedding_id", () => {
-    const { origEmb, unstEmb, scales, legend, colors } =
-      prepareEmbeddingInfo(model);
-    updateUnstList([]);
-    const unstInfo = updateUnstInfo(model, unstEmb, origEmb.length);
-
-    scatterplotView.updateEmbedding(origEmb, unstEmb, scales, updateUnstList);
-    legendView.update(legend, colors);
-    settingsView.update("distance", model.get("distance"));
-    unstableContainerView.update(
-      unstEmb,
-      unstInfo.numUnstables,
-      unstInfo.percentUnstables,
-      () => model.get("checkedUnstables"),
-      updateUnstList
-    );
-  });
-
-  model.on("change:distance", () => {
-    const { unstEmb, scales } = prepareEmbeddingInfo(model);
-    const { numUnstables, percentUnstables } = updateUnstInfo(
-      model,
-      unstEmb,
-      origEmb.length
-    );
-    updateUnstList([]);
-
-    scatterplotView.updateUnstEmbedding(unstEmb, scales, updateUnstList);
-    settingsView.update("distance", model.get("distance"));
-    unstableContainerView.update(
-      unstEmb,
-      numUnstables,
-      percentUnstables,
-      () => model.get("checkedUnstables"),
-      updateUnstList
-    );
-  });
-
-  model.on("change:sensitivity", () => {
-    const { unstEmb, scales } = prepareEmbeddingInfo(model);
-    const { numUnstables, percentUnstables } = updateUnstInfo(
-      model,
-      unstEmb,
-      origEmb.length
-    );
-    updateUnstList([]);
-
-    scatterplotView.updateUnstEmbedding(unstEmb, scales, updateUnstList);
-    settingsView.update("sensitivity", model.get("sensitivity"));
-    unstableContainerView.update(
-      unstEmb,
-      numUnstables,
-      percentUnstables,
-      () => model.get("checkedUnstables"),
-      updateUnstList
-    );
-  });
-  model.on("change:show_unstables", () => {
-    const { unstEmb } = prepareEmbeddingInfo(model);
-    scatterplotView.setVisibility(
-      "unstables",
-      model.get("show_unstables"),
-      unstEmb
-    );
-    settingsView.update("show_unstables", model.get("show_unstables"));
-  });
-  model.on("change:show_neighbors", () => {
-    scatterplotView.setVisibility("neighbors", model.get("show_neighbors"));
-    settingsView.update("show_neighbors", model.get("show_neighbors"));
-  });
-  model.on("change:show_ghosts", () => {
-    scatterplotView.setVisibility("ghosts", model.get("show_ghosts"));
-    settingsView.update("show_ghosts", model.get("show_ghosts"));
-  });
-
-  model.on("change:unstableInfo", () => {
-    const { unstEmb } = prepareEmbeddingInfo(model);
-    const unstInfo = model.get("unstableInfo");
-
-    unstableContainerView.update(
-      unstEmb,
-      unstInfo.numUnstables,
-      unstInfo.percentUnstables,
-      () => model.get("checkedUnstables"),
-      updateUnstList
-    );
-  });
-
-  model.on("change:checkedUnstables", () => {
-    const { origEmb, unstEmb, ghostEmb, scales } = prepareEmbeddingInfo(model);
-    const unstList = model.get("checkedUnstables");
-    console.log("checkedUnstables", unstList);
-
-    unstList.length === 0
-      ? scatterplotView.resetDetail(unstEmb, scales, updateUnstList)
-      : scatterplotView.updateDetail(origEmb, ghostEmb, scales, unstList);
-    unstableContainerView.updateCheckbox(unstList);
-  });
+  attachModelListener(
+    model,
+    scatterplotView,
+    legendView,
+    settingsView,
+    unstableContainerView,
+    updateUnstList
+  );
 
   el.appendChild(widget);
 }
