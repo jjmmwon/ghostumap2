@@ -3,8 +3,8 @@ node_modules
 dist
 .DS_Store
 
-stab/static
-stab/data
+rdumap/static
+rdumap/data
 data
 
 # Python
@@ -15,6 +15,7 @@ __pycache__
 
 
 *.npy
+*.npz
 
 # Jupyter Notebook
 .ipynb_checkpoints

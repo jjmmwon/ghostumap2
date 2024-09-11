@@ -1,13 +1,19 @@
-import time
-from matplotlib import pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import numba
 
 from umap.utils import tau_rand_int
 from tqdm.auto import tqdm
 
-from .utils import _sample_ghosts
+from .time_checker import measure_time
+
+from .utils import _drop_ghosts, _get_distance, _sample_ghosts
+
+from .configs import add_distance, get_config
+
+
+# @measure_time("kill_ghostst", "time.txt")
+# def wrapped_kill_ghosts(*args, **kwargs):
+#     return _kill_ghosts(*args, **kwargs)
 
 
 @numba.njit()
@@ -146,6 +152,7 @@ def _optimize_ghost_layout_euclidean_single_epoch(
     tail_embedding,
     head,
     tail,
+    alive_ghosts,
     n_ghosts,
     n_vertices,
     epochs_per_sample,
@@ -170,58 +177,62 @@ def _optimize_ghost_layout_euclidean_single_epoch(
     """
     # optimize ghost embedding
     for i in numba.prange(epochs_per_sample.shape[0]):
+        if epoch_of_next_sample[i] <= n:
+            j = head[i]  # 1st node of the ith link
+            k = tail[i]  # 2nd node of the ith link, link is symmetric
+
+        # if not alive_ghosts[j]:
+        #     continue
+
         for g in range(n_ghosts):
-            if epoch_of_next_sample[i] <= n:
-                j = head[i]  # 1st node of the ith link
-                k = tail[i]  # 2nd node of the ith link, link is symmetric
 
-                current = ghost_embeddings[j][g]
-                other = tail_embedding[k]
+            current = ghost_embeddings[j][g]
+            other = tail_embedding[k]
 
-                dist_squared = rdist(current, other)  # squared euclidean distance
+            dist_squared = rdist(current, other)  # squared euclidean distance
 
-                if dist_squared > 0.0:  # attractive force
-                    grad_coeff = -2.0 * a * b * pow(dist_squared, b - 1.0)
-                    grad_coeff /= a * pow(dist_squared, b) + 1.0
+            if dist_squared > 0.0:  # attractive force
+                grad_coeff = -2.0 * a * b * pow(dist_squared, b - 1.0)
+                grad_coeff /= a * pow(dist_squared, b) + 1.0
+            else:
+                grad_coeff = 0.0
+
+            for d in range(dim):
+                grad_d = clip(grad_coeff * (current[d] - other[d]))
+                current[d] += grad_d * alpha
+
+            n_neg_samples = int(
+                (n - epoch_of_next_negative_sample[i]) / epochs_per_negative_sample[i]
+            )
+
+            for p in range(n_neg_samples):
+                neg_k = (
+                    tau_rand_int(rng_state) % n_vertices
+                )  # A fast (pseudo)-random number generator.
+
+                other = tail_embedding[neg_k]
+
+                dist_squared = rdist(current, other)
+
+                if dist_squared > 0.0:  # repulsive force
+                    grad_coeff = 2.0 * gamma * b
+                    grad_coeff /= (0.001 + dist_squared) * (
+                        a * pow(dist_squared, b) + 1
+                    )
+                elif j == neg_k:
+                    continue
                 else:
                     grad_coeff = 0.0
 
                 for d in range(dim):
-                    grad_d = clip(grad_coeff * (current[d] - other[d]))
+                    if grad_coeff > 0.0:
+                        grad_d = clip(grad_coeff * (current[d] - other[d]))
+                    else:
+                        grad_d = 0
                     current[d] += grad_d * alpha
 
-                n_neg_samples = int(
-                    (n - epoch_of_next_negative_sample[i])
-                    / epochs_per_negative_sample[i]
-                )
 
-                for p in range(n_neg_samples):
-                    neg_k = (
-                        tau_rand_int(rng_state) % n_vertices
-                    )  # A fast (pseudo)-random number generator.
-
-                    other = tail_embedding[neg_k]
-
-                    dist_squared = rdist(current, other)
-
-                    if dist_squared > 0.0:  # repulsive force
-                        grad_coeff = 2.0 * gamma * b
-                        grad_coeff /= (0.001 + dist_squared) * (
-                            a * pow(dist_squared, b) + 1
-                        )
-                    elif j == neg_k:
-                        continue
-                    else:
-                        grad_coeff = 0.0
-
-                    for d in range(dim):
-                        if grad_coeff > 0.0:
-                            grad_d = clip(grad_coeff * (current[d] - other[d]))
-                        else:
-                            grad_d = 0
-                        current[d] += grad_d * alpha
-
-
+@measure_time("optimize_layout_euclidean", "time.txt")
 def optimize_layout_euclidean(
     n_ghosts,
     radii,
@@ -344,12 +355,27 @@ def optimize_layout_euclidean(
         original_embedding, n_ghosts, r=radii
     )  # shape (n_vertices, n_ghosts, n_components)
 
+    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+
+    config = get_config()
+    print(config)
+
     for n in tqdm(range(n_epochs), **tqdm_kwds):
+        # if n >= config.init_epoch and n % config.step_size == 0:
+
+        # alive_ghosts = _drop_ghosts(
+        #     original_embedding,
+        #     ghost_embeddings,
+        #     alive_ghosts,
+        #     distance=config.distance,
+        # )
+
         optimize_ghost_fn(
             ghost_embeddings,
             original_embedding.astype(np.float32),
             head,
             tail,
+            alive_ghosts,
             n_ghosts,
             n_vertices,
             epochs_per_sample,
@@ -390,10 +416,14 @@ def optimize_layout_euclidean(
         if verbose and n % int(n_epochs / 10) == 0:
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
+        distances = _get_distance(original_embedding, ghost_embeddings)
+        add_distance(distances)
+
         # if epochs_list is not None and n in epochs_list:
         #     embedding_list.append(head_embedding.copy())
     # Add the last embedding to the list as well
     # if epochs_list is not None:
     #     embedding_list.append(head_embedding.copy())
+    alive_ghosts = _drop_ghosts(original_embedding, ghost_embeddings, alive_ghosts)
 
-    return (original_embedding, ghost_embeddings)
+    return (original_embedding, ghost_embeddings, alive_ghosts)

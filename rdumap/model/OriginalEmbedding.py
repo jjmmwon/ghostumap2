@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from stab.utlis.getRadii import get_radii
+from rdumap.utlis.getRadii import get_radii
 
 
 @dataclass

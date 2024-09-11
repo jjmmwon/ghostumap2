@@ -1,14 +1,14 @@
-# stab
+# rdumap
 
 ## Installation
 
 ```sh
-pip install stab
+pip install rdumap
 ```
 
 ## Development installation
 
-Create a virtual environment and and install stab in *editable* mode with the
+Create a virtual environment and and install rdumap in *editable* mode with the
 optional development dependencies:
 
 ```sh
@@ -27,4 +27,3 @@ npm run dev
 Open `example.ipynb` in JupyterLab, VS Code, or your favorite editor
 to start developing. Changes made in `js/` will be reflected
 in the notebook.
-# rdumap

@@ -27,6 +27,43 @@ def _sample_ghosts(
     return np.array(samples, dtype=np.float32, order="C")
 
 
+def _drop_ghosts(
+    original_embedding: np.ndarray,
+    ghost_embeddings: np.ndarray,
+    alive_ghosts: np.ndarray,
+    distance: int = 0.01,
+) -> np.ndarray:
+    print(np.sum(alive_ghosts))
+
+    alive_indices = np.where(alive_ghosts)[0]
+
+    radii = _get_radii(original_embedding[alive_ghosts], ghost_embeddings[alive_ghosts])
+
+    x_range = np.max(original_embedding[:, 0]) - np.min(original_embedding[:, 0])
+    y_range = np.max(original_embedding[:, 1]) - np.min(original_embedding[:, 1])
+    max_dist = np.max([x_range, y_range])
+
+    dropped_idx = np.where(radii[:, -1] < distance * max_dist)[0]
+    alive_ghosts[alive_indices[dropped_idx]] = False
+
+    print(np.sum(alive_ghosts))
+    return alive_ghosts
+
+
+def _get_distance(
+    original_embedding: np.ndarray, ghost_embeddings: np.ndarray
+) -> np.ndarray:
+    radii = _get_radii(original_embedding, ghost_embeddings)
+
+    x_range = np.max(original_embedding[:, 0]) - np.min(original_embedding[:, 0])
+    y_range = np.max(original_embedding[:, 1]) - np.min(original_embedding[:, 1])
+    max_dist = np.max([x_range, y_range])
+
+    distances = radii[:, -1] / max_dist
+
+    return distances
+
+
 def _get_radii(
     original_embedding: np.ndarray, ghost_embeddings: np.ndarray
 ) -> np.ndarray:

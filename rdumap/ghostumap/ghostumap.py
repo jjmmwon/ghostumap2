@@ -42,10 +42,10 @@ import matplotlib.pyplot as plt
 from pynndescent.distances import named_distances as pynn_named_distances
 from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_distances
 
-from .utils import _get_radii
+from .utils import _get_radii, _drop_ghosts
 
 from .layouts import optimize_layout_euclidean
-
+from .configs import get_config, set_config
 
 TNumber = Union[float, int]
 
@@ -267,7 +267,7 @@ def simplicial_set_embedding(
         / (np.max(embedding, 0) - np.min(embedding, 0))
     ).astype(np.float32, order="C")
 
-    (original_embedding, ghost_embeddings) = optimize_layout_euclidean(
+    (original_embedding, ghost_embeddings, alive_ghosts) = optimize_layout_euclidean(
         n_ghosts,
         radii,
         embedding,
@@ -288,7 +288,7 @@ def simplicial_set_embedding(
         move_other=True,
     )
 
-    return original_embedding, ghost_embeddings, aux_data
+    return original_embedding, ghost_embeddings, alive_ghosts, aux_data
 
 
 class GhostUMAP(UMAP):
@@ -1059,6 +1059,7 @@ class GhostUMAP(UMAP):
             (
                 self.original_embedding,
                 self.ghost_embeddings,
+                self.alive_ghosts,
                 aux_data,
             ) = self._fit_embed_data(
                 self._raw_data[index],
@@ -1109,6 +1110,9 @@ class GhostUMAP(UMAP):
         force_all_finite: bool = True,
         n_ghosts: int = 8,
         radii: Union[TNumber, Tuple[TNumber, TNumber]] = 0.1,
+        init_epoch: int = 50,
+        step_size: int = 20,
+        distance: float = 0.005,
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1146,6 +1150,8 @@ class GhostUMAP(UMAP):
 
         """
 
+        set_config(init_epoch=init_epoch, step_size=step_size, distance=distance)
+
         if n_ghosts < 1:
             raise ValueError("n_ghosts should be greater than 0")
 
@@ -1154,13 +1160,27 @@ class GhostUMAP(UMAP):
         y = None
         self.fit(X, y, force_all_finite, n_ghosts, radii)
 
-        return (
-            self.original_embedding,
-            self.ghost_embeddings,
-        )
+        return (self.original_embedding, self.ghost_embeddings, self.alive_ghosts)
 
     def get_radii(self) -> np.ndarray:
         if not hasattr(self, "original_embedding"):
             raise ValueError("The model has not been fitted yet.")
 
         return _get_radii(self.original_embedding, self.ghost_embeddings)
+
+    def get_unstables(self) -> np.ndarray:
+        if not hasattr(self, "original_embedding"):
+            raise ValueError("The model has not been fitted yet.")
+
+        alive_ghosts = np.ones(self.original_embedding.shape[0], dtype=bool)
+        alive_ghosts = _drop_ghosts(
+            self.original_embedding, self.ghost_embeddings, alive_ghosts, distance=0.01
+        )
+
+        return alive_ghosts
+
+    def get_distances(self) -> np.ndarray:
+        if not hasattr(self, "original_embedding"):
+            raise ValueError("The model has not been fitted yet.")
+
+        return get_config().distance_list

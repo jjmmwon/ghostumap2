@@ -20,7 +20,7 @@ class EmbeddingSetInput(TypedDict):
 
 
 try:
-    __version__ = importlib.metadata.version("stab")
+    __version__ = importlib.metadata.version("rdumap")
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
@@ -42,6 +42,7 @@ class Widget(anywidget.AnyWidget):
     sensitivity = traitlets.Float(0.9).tag(sync=True)
     show_neighbors = traitlets.Bool(True).tag(sync=True)
     show_ghosts = traitlets.Bool(True).tag(sync=True)
+    show_unstables = traitlets.Bool(True).tag(sync=True)
     embedding_id = traitlets.Int(0).tag(sync=True)
 
     def __init__(
