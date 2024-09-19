@@ -1110,8 +1110,8 @@ class GhostUMAP(UMAP):
         force_all_finite: bool = True,
         n_ghosts: int = 8,
         radii: Union[TNumber, Tuple[TNumber, TNumber]] = 0.1,
+        ghost_init: float = 0.1,
         init_epoch: int = 50,
-        step_size: int = 20,
         distance: float = 0.005,
     ):
         """
@@ -1150,7 +1150,7 @@ class GhostUMAP(UMAP):
 
         """
 
-        set_config(init_epoch=init_epoch, step_size=step_size, distance=distance)
+        set_config(ghost_init=ghost_init, init_epoch=init_epoch, distance=distance)
 
         if n_ghosts < 1:
             raise ValueError("n_ghosts should be greater than 0")

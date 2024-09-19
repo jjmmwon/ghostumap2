@@ -149,11 +149,12 @@ def _optimize_real_layout_euclidean_single_epoch(
 
 def _optimize_ghost_layout_euclidean_single_epoch(
     ghost_embeddings,
+    n_ghosts,
+    alive_ghosts,
+    head_embedding,
     tail_embedding,
     head,
     tail,
-    alive_ghosts,
-    n_ghosts,
     n_vertices,
     epochs_per_sample,
     a,
@@ -161,6 +162,7 @@ def _optimize_ghost_layout_euclidean_single_epoch(
     rng_state,
     gamma,
     dim,
+    move_other,
     alpha,
     epochs_per_negative_sample,
     epoch_of_next_negative_sample,
@@ -185,7 +187,6 @@ def _optimize_ghost_layout_euclidean_single_epoch(
         #     continue
 
         for g in range(n_ghosts):
-
             current = ghost_embeddings[j][g]
             other = tail_embedding[k]
 
@@ -200,6 +201,22 @@ def _optimize_ghost_layout_euclidean_single_epoch(
             for d in range(dim):
                 grad_d = clip(grad_coeff * (current[d] - other[d]))
                 current[d] += grad_d * alpha
+
+            if move_other:
+                current_orig = head_embedding[j]
+                other_ghost = ghost_embeddings[k][g]
+
+                dist_squared = rdist(current_orig, other_ghost)
+
+                if dist_squared > 0.0:  # attractive force
+                    grad_coeff = -2.0 * a * b * pow(dist_squared, b - 1.0)
+                    grad_coeff /= a * pow(dist_squared, b) + 1.0
+                else:
+                    grad_coeff = 0.0
+
+                for d in range(dim):
+                    grad_d = clip(grad_coeff * (current_orig[d] - other_ghost[d]))
+                    other_ghost[d] += -grad_d * alpha
 
             n_neg_samples = int(
                 (n - epoch_of_next_negative_sample[i]) / epochs_per_negative_sample[i]
@@ -351,9 +368,10 @@ def optimize_layout_euclidean(
     if "disable" not in tqdm_kwds:
         tqdm_kwds["disable"] = not verbose
 
-    ghost_embeddings = _sample_ghosts(
-        original_embedding, n_ghosts, r=radii
-    )  # shape (n_vertices, n_ghosts, n_components)
+    ghost_embeddings = None
+    # _sample_ghosts(
+    #     original_embedding, n_ghosts, r=radii
+    # )  # shape (n_vertices, n_ghosts, n_components)
 
     alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
 
@@ -361,6 +379,9 @@ def optimize_layout_euclidean(
     print(config)
 
     for n in tqdm(range(n_epochs), **tqdm_kwds):
+        if ghost_embeddings is None and n >= int(n_epochs * config.ghost_init):
+            ghost_embeddings = _sample_ghosts(original_embedding, n_ghosts, r=radii)
+
         # if n >= config.init_epoch and n % config.step_size == 0:
 
         # alive_ghosts = _drop_ghosts(
@@ -369,27 +390,29 @@ def optimize_layout_euclidean(
         #     alive_ghosts,
         #     distance=config.distance,
         # )
-
-        optimize_ghost_fn(
-            ghost_embeddings,
-            original_embedding.astype(np.float32),
-            head,
-            tail,
-            alive_ghosts,
-            n_ghosts,
-            n_vertices,
-            epochs_per_sample,
-            a,
-            b,
-            rng_state,
-            gamma,
-            dim,
-            alpha,
-            epochs_per_negative_sample,
-            epoch_of_next_negative_sample,
-            epoch_of_next_sample,
-            n,
-        )
+        if ghost_embeddings is not None:
+            optimize_ghost_fn(
+                ghost_embeddings,
+                n_ghosts,
+                alive_ghosts,
+                original_embedding.astype(np.float32),
+                original_embedding.astype(np.float32),
+                head,
+                tail,
+                n_vertices,
+                epochs_per_sample,
+                a,
+                b,
+                rng_state,
+                gamma,
+                dim,
+                move_other,
+                alpha,
+                epochs_per_negative_sample,
+                epoch_of_next_negative_sample,
+                epoch_of_next_sample,
+                n,
+            )
 
         optimize_real_fn(
             original_embedding,
@@ -416,8 +439,9 @@ def optimize_layout_euclidean(
         if verbose and n % int(n_epochs / 10) == 0:
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
-        distances = _get_distance(original_embedding, ghost_embeddings)
-        add_distance(distances)
+        if ghost_embeddings is not None:
+            distances = _get_distance(original_embedding, ghost_embeddings)
+            add_distance(distances)
 
         # if epochs_list is not None and n in epochs_list:
         #     embedding_list.append(head_embedding.copy())
