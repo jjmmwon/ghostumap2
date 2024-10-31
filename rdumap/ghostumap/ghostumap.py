@@ -1,8 +1,7 @@
 import time
-from typing import List, Literal, Tuple, Union
 from warnings import warn
 import joblib
-from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import KDTree
@@ -37,23 +36,25 @@ import numba
 import scipy.sparse
 from scipy.sparse import tril as sparse_tril, triu as sparse_triu
 
-import matplotlib.pyplot as plt
 
 from pynndescent.distances import named_distances as pynn_named_distances
 from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_distances
 
-from .utils import _get_radii, _drop_ghosts
+from .utils import _get_distance, _get_radii, drop_ghosts
 
 from .layouts import optimize_layout_euclidean
-from .configs import get_config, set_config
+from .layouts_for_BM import (
+    optimize_layout_euclidean as optimize_layout_euclidean_for_BM,
+    optimize_layout_euclidean_v0 as optimize_layout_euclidean_for_BM_vanilla,
+)
 
-TNumber = Union[float, int]
+from .configs import get_config as _get_config, set_config
+from .results import get_results as _get_results, set_results
 
 
 def simplicial_set_embedding(
     data,
     n_ghosts,
-    radii,
     graph,
     n_components,
     initial_alpha,
@@ -267,26 +268,58 @@ def simplicial_set_embedding(
         / (np.max(embedding, 0) - np.min(embedding, 0))
     ).astype(np.float32, order="C")
 
-    (original_embedding, ghost_embeddings, alive_ghosts) = optimize_layout_euclidean(
-        n_ghosts,
-        radii,
-        embedding,
-        head,
-        tail,
-        n_epochs,
-        n_vertices,
-        epochs_per_sample,
-        a,
-        b,
-        rng_state,
-        gamma,
-        initial_alpha,
-        negative_sample_rate,
-        parallel=parallel,
-        verbose=verbose,
-        tqdm_kwds=tqdm_kwds,
-        move_other=True,
-    )
+    bm_type = _get_config().bm_type
+
+    if bm_type == "None":
+        (original_embedding, ghost_embeddings, alive_ghosts) = (
+            optimize_layout_euclidean(
+                n_ghosts,
+                embedding,
+                head,
+                tail,
+                n_epochs,
+                n_vertices,
+                epochs_per_sample,
+                a,
+                b,
+                rng_state,
+                gamma,
+                initial_alpha,
+                negative_sample_rate,
+                parallel=parallel,
+                verbose=verbose,
+                tqdm_kwds=tqdm_kwds,
+                move_other=True,
+            )
+        )
+    else:
+        opt_func = {
+            "accuracy": optimize_layout_euclidean_for_BM,
+            "time_with_dropping": optimize_layout_euclidean_for_BM,
+            "time_without_dropping": optimize_layout_euclidean_for_BM_vanilla,
+        }.get(bm_type, optimize_layout_euclidean_for_BM)
+
+        (original_embedding, ghost_embeddings, alive_ghosts), opt_time = opt_func(
+            n_ghosts,
+            embedding,
+            head,
+            tail,
+            n_epochs,
+            n_vertices,
+            epochs_per_sample,
+            a,
+            b,
+            rng_state,
+            gamma,
+            initial_alpha,
+            negative_sample_rate,
+            parallel=parallel,
+            verbose=verbose,
+            tqdm_kwds=tqdm_kwds,
+            move_other=True,
+        )
+
+        set_results(opt_time=opt_time)
 
     return original_embedding, ghost_embeddings, alive_ghosts, aux_data
 
@@ -550,14 +583,13 @@ class GhostUMAP(UMAP):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def _fit_embed_data(self, X, n_ghosts, radii, n_epochs, init, random_state):
+    def _fit_embed_data(self, X, n_ghosts, n_epochs, init, random_state):
         """A method wrapper for simplicial_set_embedding_with_ghost that can be
         replaced by subclasses.
         """
         return simplicial_set_embedding(
             X,
             n_ghosts,
-            radii,
             self.graph_,
             self.n_components,
             self._initial_alpha,
@@ -581,7 +613,6 @@ class GhostUMAP(UMAP):
         y=None,
         force_all_finite=True,
         n_ghosts=16,
-        radii=0.1,
     ):
         """Fit X into an embedded space.
 
@@ -1064,7 +1095,6 @@ class GhostUMAP(UMAP):
             ) = self._fit_embed_data(
                 self._raw_data[index],
                 n_ghosts,
-                radii,
                 epochs,
                 init,
                 random_state,
@@ -1109,10 +1139,12 @@ class GhostUMAP(UMAP):
         X: np.ndarray,
         force_all_finite: bool = True,
         n_ghosts: int = 8,
-        radii: Union[TNumber, Tuple[TNumber, TNumber]] = 0.1,
-        ghost_init: float = 0.1,
-        init_epoch: int = 50,
-        distance: float = 0.005,
+        radii: float = 0.1,
+        sensitivity: float = 0.9,
+        ghost_gen: float = 0.1,
+        init_dropping: float = 0.5,
+        mov_avg_weight: float = 0.9,
+        bm_type: str = "None",
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1149,16 +1181,20 @@ class GhostUMAP(UMAP):
             The indices of the ghost points in the original data.
 
         """
-
-        set_config(ghost_init=ghost_init, init_epoch=init_epoch, distance=distance)
+        set_config(
+            radii=radii,
+            sensitivity=sensitivity,
+            ghost_gen=ghost_gen,
+            init_dropping=init_dropping,
+            mov_avg_weight=mov_avg_weight,
+            bm_type=bm_type,
+        )
 
         if n_ghosts < 1:
             raise ValueError("n_ghosts should be greater than 0")
 
-        radii = radii if isinstance(radii, tuple) else (0, radii)
-
         y = None
-        self.fit(X, y, force_all_finite, n_ghosts, radii)
+        self.fit(X, y, force_all_finite, n_ghosts)
 
         return (self.original_embedding, self.ghost_embeddings, self.alive_ghosts)
 
@@ -1168,19 +1204,34 @@ class GhostUMAP(UMAP):
 
         return _get_radii(self.original_embedding, self.ghost_embeddings)
 
-    def get_unstables(self) -> np.ndarray:
+    def get_unstable_ghosts(
+        self, distance: float = 0.1, sensitivity: float = 0.9
+    ) -> np.ndarray:
         if not hasattr(self, "original_embedding"):
             raise ValueError("The model has not been fitted yet.")
 
         alive_ghosts = np.ones(self.original_embedding.shape[0], dtype=bool)
-        alive_ghosts = _drop_ghosts(
-            self.original_embedding, self.ghost_embeddings, alive_ghosts, distance=0.01
+
+        alive_ghosts = drop_ghosts(
+            self.original_embedding,
+            self.ghost_embeddings,
+            alive_ghosts,
+            distance=distance,
+            sensitivity=sensitivity,
         )
 
         return alive_ghosts
 
-    def get_distances(self) -> np.ndarray:
-        if not hasattr(self, "original_embedding"):
-            raise ValueError("The model has not been fitted yet.")
+    def get_distances(self, sensitivity: float = 0.9) -> np.ndarray:
+        return _get_distance(
+            self.original_embedding,
+            self.ghost_embeddings,
+            self.alive_ghosts,
+            sensitivity,
+        )
 
-        return get_config().distance_list
+    def get_results(self):
+        return _get_results()
+
+    def get_config(self):
+        return _get_config()
