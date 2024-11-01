@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from rdumap.utlis.getRadii import get_radii
+from rdumap.ghostumap.utils import _get_radii as get_radii
 
 
 @dataclass

@@ -7,7 +7,6 @@ import traitlets
 import numpy as np
 
 from .model import EmbeddingSet
-from .utlis import get_radii
 
 
 class EmbeddingSetInput(TypedDict):
