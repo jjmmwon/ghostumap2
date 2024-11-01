@@ -16,6 +16,7 @@ __pycache__
 
 *.npy
 *.npz
+*.csv
 
 # Jupyter Notebook
 .ipynb_checkpoints
