@@ -1,7 +1,7 @@
 from dataclasses import asdict
 import numpy as np
 
-from .types import THyperparameter, TResult, Tbenchmark
+from .models import THyperparameter, TResult, Tbenchmark
 from rdumap.ghostumap import GhostUMAP
 
 

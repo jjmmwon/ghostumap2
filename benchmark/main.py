@@ -7,16 +7,23 @@ from benchmark.runner import run_GhostUMAP, measure_accuracy
 from benchmark.save_manager import save_embeddings, save_results
 from rdumap.data import DataLoader
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+logging.basicConfig(
+    filename="benchmark.log",
+    format="%(levelname)s: %(message)s",
+    level=logging.INFO,
+    filemode="a",
+)
 
 
-def main(data_name: str, base_settings: dict, param_grid: dict, iterations: int = 1):
+def main(data_name: str, base_settings: dict, param_grid: dict, iterations: int = 10):
     # Load dataset
 
     logging.info(f"Loading dataset: {data_name}")
     dl = DataLoader(data_name)
 
     X, y, legend, precomputed_knn = dl.get_data().values()
+
+    print(precomputed_knn)
 
     logging.info("Generating hyperparameter combinations.")
     hpram_comb = generate_hyperparameter_comb(base_settings, param_grid)
@@ -87,7 +94,8 @@ def main(data_name: str, base_settings: dict, param_grid: dict, iterations: int 
 
 
 if __name__ == "__main__":
-    data_name = ["celegans", "mnist", "fmnist", "kmnist"]
+    # data_name = ["celegans", "mnist", "fmnist", "kmnist"]
+    data_name = ["kmnist"]
 
     base_settings = {
         "n_ghosts": 16,
@@ -96,13 +104,14 @@ if __name__ == "__main__":
         "mov_avg_weight": 0.9,
     }
     param_grid = {
-        # "ghost_gen": [0, 0.1, 0.2, 0.3],
-        "ghost_gen": [0.1, 0.2],
-        # "init_dropping": [0.3, 0.4, 0.5, 0.6],
-        "init_dropping": [0.5, 0.6],
+        "ghost_gen": [0, 0.1, 0.2, 0.3],
+        # "ghost_gen": [0.1],
+        "init_dropping": [0.3, 0.4, 0.5, 0.6],
+        # "init_dropping": [0.5],
     }
+    print(data_name)
 
-    for data in data_name[:1]:
+    for data in data_name:
         logging.info(f"Starting benchmark for dataset: {data}")
         main(data, base_settings, param_grid)
         logging.info(f"Completed benchmark for dataset: {data}")

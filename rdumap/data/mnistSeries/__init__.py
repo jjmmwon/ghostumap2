@@ -51,16 +51,15 @@ class MnistSeriesLoader(BaseLoader):
     def __init__(self, type: MnistType = "mnist"):
         super().__init__()
         self.type = type
+        self.data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.type)
         self._load_data()
 
     def _load_data(self):
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.type)
-
         paths = {
-            "data": os.path.join(base_path, f"{self.type}.npy"),
-            "label": os.path.join(base_path, "label.npy"),
-            "knn_dists": os.path.join(base_path, "knn_dists.npy"),
-            "knn_indices": os.path.join(base_path, "knn_indices.npy"),
+            "data": os.path.join(self.data_path, f"{self.type}.npy"),
+            "label": os.path.join(self.data_path, "label.npy"),
+            "knn_dists": os.path.join(self.data_path, "knn_dists.npy"),
+            "knn_indices": os.path.join(self.data_path, "knn_indices.npy"),
         }
 
         self._data = np.load(paths["data"])

@@ -1,4 +1,4 @@
-from .types import *
+from .models import *
 from .hyperparameters import *
 from .runner import *
 from .save_manager import *

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from .hyperparameters import make_dir_name
-from .types import THyperparameter, TResult, Tbenchmark
+from .models import THyperparameter, TResult, Tbenchmark
 
 
 def save_embeddings(

@@ -20,6 +20,7 @@ class BaseLoader:
 
         if self._precomputed_knn[0] is not None:
             return self._precomputed_knn
+        
         self._precomputed_knn = nearest_neighbors(
             self._data,
             n_neighbors,
@@ -32,17 +33,17 @@ class BaseLoader:
             self._precomputed_knn[0],
             self._precomputed_knn[1],
         )
+        
         if self.data_path is None:
             return self._precomputed_knn
 
-        save_path = os.path.join(self.data_path, f"precomputed_knn_{n_neighbors}")
-
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-            np.save(os.path.join(save_path, "knn_dists.npy"), self._precomputed_knn[0])
-            np.save(
-                os.path.join(save_path, "knn_indices.npy"), self._precomputed_knn[1]
-            )
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
+        
+        np.save(os.path.join(self.data_path, "knn_dists.npy"), self._precomputed_knn[0])
+        np.save(
+            os.path.join(self.data_path, "knn_indices.npy"), self._precomputed_knn[1]
+        )
 
         return self._precomputed_knn
 
