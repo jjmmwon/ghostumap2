@@ -9,7 +9,7 @@ from rdumap.ghostumap.results import set_results
 
 from .time_checker import measure_time
 
-from .utils import drop_ghosts, _get_distance, sample_ghosts
+from .utils import _measure_instability, drop_ghosts, _get_distance, sample_ghosts
 
 from .configs import get_config
 
@@ -455,6 +455,7 @@ def optimize_layout_euclidean(
     (radii, sensitivity, ghost_gen, init_dropping, mov_avg_weight, bm_type) = asdict(
         config
     ).values()
+    print(bm_type)
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha
@@ -472,7 +473,7 @@ def optimize_layout_euclidean(
     optimize_ghost_fn = numba.njit(
         (
             _optimize_ghost_layout_euclidean_single_epoch_without_dropping
-            if bm_type == "accuracy"
+            if bm_type == "accuracy_dropping"
             else _optimize_ghost_layout_euclidean_single_epoch_with_dropping
         ),
         fastmath=True,
@@ -572,6 +573,149 @@ def optimize_layout_euclidean(
                 distance_list,
                 thresholds,
             )
+
+    set_results(
+        distance_list=np.array(distance_list),
+        threshold_list=np.array(thresholds),
+    )
+
+    return (original_embedding, ghost_embeddings, alive_ghosts)
+
+
+@measure_time("")
+def optimize_layout_euclidean_with_SH(
+    n_ghosts,
+    original_embedding,
+    head,
+    tail,
+    n_epochs,
+    n_vertices,
+    epochs_per_sample,
+    a,
+    b,
+    rng_state,
+    gamma=1.0,
+    initial_alpha=1.0,
+    negative_sample_rate=5.0,
+    parallel=False,
+    verbose=False,
+    tqdm_kwds=None,
+    move_other=False,
+):
+
+    schedule = [0.25, 0.5, 0.75]
+    schedule = [int(n_epochs * s) for s in schedule]
+
+    config = get_config()
+    bm_type = config.bm_type
+    print(bm_type)
+
+    dim = original_embedding.shape[1]
+    alpha = initial_alpha
+
+    epochs_per_negative_sample = epochs_per_sample / negative_sample_rate
+    epoch_of_next_negative_sample = epochs_per_negative_sample.copy()
+    epoch_of_next_sample = epochs_per_sample.copy()
+
+    optimize_real_fn = numba.njit(
+        _optimize_real_layout_euclidean_single_epoch,
+        fastmath=True,
+        parallel=parallel,
+    )
+
+    optimize_ghost_fn = numba.njit(
+        (
+            _optimize_ghost_layout_euclidean_single_epoch_without_dropping
+            if bm_type == "accuracy_SH"
+            else _optimize_ghost_layout_euclidean_single_epoch_with_dropping
+        ),
+        fastmath=True,
+        parallel=parallel,
+    )
+
+    if tqdm_kwds is None:
+        tqdm_kwds = {}
+
+    epochs_list = None
+
+    if isinstance(n_epochs, list):
+        epochs_list = n_epochs
+        n_epochs = max(epochs_list)
+
+    if "disable" not in tqdm_kwds:
+        tqdm_kwds["disable"] = not verbose
+
+    ghost_embeddings = np.array(
+        [np.tile(original_embedding[j], (n_ghosts, 1)) for j in range(n_vertices)],
+        dtype=np.float32,
+    )
+
+    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+    distance_list = []
+    thresholds = []
+
+    for n in tqdm(range(n_epochs), **tqdm_kwds):
+
+        optimize_ghost_fn(
+            ghost_embeddings,
+            n_ghosts,
+            alive_ghosts,
+            original_embedding.astype(np.float32),
+            original_embedding.astype(np.float32),
+            head,
+            tail,
+            n_vertices,
+            epochs_per_sample,
+            a,
+            b,
+            rng_state,
+            gamma,
+            dim,
+            move_other,
+            alpha,
+            epochs_per_negative_sample,
+            epoch_of_next_negative_sample,
+            epoch_of_next_sample,
+            n,
+        )
+
+        optimize_real_fn(
+            original_embedding,
+            original_embedding,
+            head,
+            tail,
+            n_vertices,
+            epochs_per_sample,
+            a,
+            b,
+            rng_state,
+            gamma,
+            dim,
+            move_other,
+            alpha,
+            epochs_per_negative_sample,
+            epoch_of_next_negative_sample,
+            epoch_of_next_sample,
+            n,
+        )
+
+        alpha = initial_alpha * (1.0 - (float(n) / float(n_epochs)))
+
+        if verbose and n % int(n_epochs / 10) == 0:
+            print("\tcompleted ", n, " / ", n_epochs, "epochs")
+
+        if n in schedule:
+            print(n)
+            # print(len(np.where(alive_ghosts)[0]))
+            rank, _ = _measure_instability(
+                original_embedding,
+                ghost_embeddings,
+                alive_ghosts,
+            )
+
+            normal_ghosts = rank[len(rank) // 2 :]
+
+            alive_ghosts[normal_ghosts] = False
 
     set_results(
         distance_list=np.array(distance_list),

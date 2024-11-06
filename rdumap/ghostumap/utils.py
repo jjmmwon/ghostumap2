@@ -32,7 +32,7 @@ def drop_ghosts(
     ghost_embeddings: np.ndarray,
     alive_ghosts: np.ndarray,
     sensitivity: float = 0.9,
-    distance: int = 0.01,
+    distance: int = 0.1,
 ) -> np.ndarray:
     # print(np.sum(alive_ghosts))
 
@@ -84,3 +84,26 @@ def _get_radii(
     radii = np.sort(radii, axis=1)
 
     return radii
+
+
+def _measure_instability(
+    original_embedding: np.ndarray,
+    ghost_embeddings: np.ndarray,
+    alive_ghosts: np.ndarray,
+):
+    O = original_embedding[alive_ghosts]
+    G = ghost_embeddings[alive_ghosts]
+
+    Y = np.concatenate([O[:, np.newaxis], G], axis=1)
+
+    Mu = np.mean(Y, axis=1)
+
+    INS = np.sum(np.square(Y - Mu[:, np.newaxis]), axis=2)
+    INS = np.mean(INS, axis=1)
+
+    rank = np.argsort(INS)[::-1]
+    score = INS[rank]
+
+    rank = np.where(alive_ghosts)[0][rank]
+
+    return rank, score
