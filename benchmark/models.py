@@ -21,7 +21,13 @@ class TResult(TypedDict):
     threshold_list: np.ndarray
 
 
-Tbenchmark = Literal["accuracy", "time_with_dropping", "time_without_dropping"]
+Tbenchmark = Literal[
+    "accuracy_dropping",
+    "accuracy_SH",
+    "time_with_dropping",
+    "time_with_SH",
+    "time_original_GU",
+]
 
 
 __all__ = [

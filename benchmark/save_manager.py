@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 from typing import Dict, List
@@ -50,11 +51,14 @@ def save_results(
     results_dir: str = "results",
 ):
     df = pd.DataFrame(results)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if not os.path.isdir(results_dir):
         os.makedirs(results_dir)
+
     if not os.path.isdir(f"{results_dir}/{data_name}"):
         os.makedirs(f"{results_dir}/{data_name}")
+        df.to_csv(f"{results_dir}/{data_name}/result_{timestamp}.csv", index=False)
 
     if not os.path.exists(f"{results_dir}/result.csv"):
         df.to_csv(f"{results_dir}/result.csv", index=False)
