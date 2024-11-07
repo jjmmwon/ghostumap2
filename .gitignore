@@ -14,9 +14,17 @@ __pycache__
 
 
 
+# Dataset for benchmarking
 *.npy
 *.npz
 *.csv
+*.data
+*.name
+rdumap/data/*.json
+
+# log for benchmarking
+*.log
+*.out
 
 # Jupyter Notebook
 .ipynb_checkpoints
