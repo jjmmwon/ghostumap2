@@ -19,11 +19,13 @@ TDataName = Literal[
     "optical_recognition",
     "raisin",
     "htru2",
+    "parishousing",
+    "cnae9",
 ]
 
 
 class DataModel(TypedDict):
     data: np.ndarray
     label: np.ndarray | None
-    label_dict: dict | None
+    legend: dict | None
     precomputed_knn: TprecomputedKnn = (None, None)

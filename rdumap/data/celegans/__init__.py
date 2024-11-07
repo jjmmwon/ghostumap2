@@ -9,25 +9,14 @@ import pandas as pd
 class CelegansLoader(BaseLoader):
     def __init__(self):
         super().__init__()
-        self.type = "celegans"
-        # self._load_raw_data()
-        self._load_data()
+        self.name = "celegans"
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.load_data()
 
-    def _load_data(self):
-
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        self._data = np.load(os.path.join(base_path, "celegans_data.npy"))
-        self._label = np.load(os.path.join(base_path, "celegans_label.npy"))
-        self._precomputed_knn = (
-            (
-                np.load(os.path.join(base_path, "knn_indices.npy")),
-                np.load(os.path.join(base_path, "knn_dists.npy")),
-            )
-            if os.path.exists(os.path.join(base_path, "knn_indices.npy"))
-            and os.path.exists(os.path.join(base_path, "knn_dists.npy"))
-            else (None, None)
-        )
-
+    def load_raw_data(self):
+        self._data = np.load(os.path.join(self.base_path, "data.npy"))
+        self._label = np.load(os.path.join(self.base_path, "label.npy"))
+        self._data = self.scale_data(self._data)
         self._legend = [
             "ASE, ASJ, AUA",
             "ASH",
@@ -41,10 +30,13 @@ class CelegansLoader(BaseLoader):
             "Not annotated",
         ]
 
+        self._precomputed_knn = self.get_precomputed_knn(self._data)
+
+        self.save_data(self.base_path)
+
     def _load_raw_data(self):
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        preprocessed_path = os.path.join(base_path, "celegans_proccessed.csv")
-        metadata_path = os.path.join(base_path, "celegans_metadata.csv")
+        preprocessed_path = os.path.join(self.base_path, "celegans_proccessed.csv")
+        metadata_path = os.path.join(self.base_path, "celegans_metadata.csv")
 
         df = pd.read_csv(preprocessed_path, index_col=0)
         df2 = pd.read_csv(metadata_path, index_col=0)
@@ -91,7 +83,7 @@ class CelegansLoader(BaseLoader):
             "ASK": "ASK",
         }
 
-        self._data = np.array(df)
+        self._data = self.scale_data(np.array(df))
         self._label = np.array([ctype_to_lineage[celltype] for celltype in cell_types])
         self._legend = [
             "ASE, ASJ, AUA",
@@ -105,18 +97,6 @@ class CelegansLoader(BaseLoader):
             "ADF, AWB",
             "Not annotated",
         ]
-        self._precomputed_knn = (
-            (
-                np.load(f"./{self.type}/knn_dists.npy"),
-                np.load(f"./{self.type}/knn_indices.npy"),
-            )
-            if os.path.exists(f"./{self.type}/knn_dists.npy")
-            and os.path.exists(f"./{self.type}/knn_indices.npy")
-            else (None, None)
-        )
+        self._precomputed_knn = self.get_precomputed_knn(self._data)
 
-        np.save(os.path.join(base_path, "celegans_data.npy"), self._data)
-        np.save(os.path.join(base_path, "celegans_label.npy"), self._label)
-
-    def get_data(self):
-        return super().get_data()
+        self.save_data(self.base_path)

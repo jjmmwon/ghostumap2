@@ -51,42 +51,17 @@ class MnistSeriesLoader(BaseLoader):
     def __init__(self, name: MnistType = "mnist"):
         super().__init__()
         self.name = name
-        self.data_path = os.path.join(
+        self.base_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), self.name
         )
-        self._load_data()
-
-    def _load_data(self):
-        paths = {
-            "data": os.path.join(self.data_path, f"{self.name}.npy"),
-            "label": os.path.join(self.data_path, "label.npy"),
-            "knn_dists": os.path.join(self.data_path, "knn_dists.npy"),
-            "knn_indices": os.path.join(self.data_path, "knn_indices.npy"),
-        }
-
-        self._data = np.load(paths["data"])
-
-        self._label = (
-            np.load(paths["label"]) if os.path.exists(paths["label"]) else None
-        )
-
-        self._legend = list(label_dict[self.name].values())
-
-        self._precomputed_knn = (
-            (
-                np.load(paths["knn_indices"]),
-                np.load(paths["knn_dists"]),
-            )
-            if os.path.exists(paths["knn_indices"])
-            and os.path.exists(paths["knn_dists"])
-            else self.get_precomputed_knn()
-        )
+        self.load_data()
 
     def load_raw_data(self):
-        raise NotImplementedError
+        self._data = np.load(os.path.join(self.base_path, "data.npy"))
+        self._label = np.load(os.path.join(self.base_path, "label.npy"))
+        self._data = self.scale_data(self._data)
+        self._legend = [label_dict[self.name][i] for i in range(10)]
 
-    def get_data(self):
-        return super().get_data()
+        self._precomputed_knn = self.get_precomputed_knn(self._data)
 
-    def get_precomputed_knn(self, n_neighbors: int = 15):
-        return super().get_precomputed_knn(n_neighbors)
+        self.save_data(self.base_path)

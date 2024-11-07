@@ -2,6 +2,9 @@ from .model import TDataName, DataModel
 
 from .mnistSeries import MnistSeriesLoader
 from .celegans import CelegansLoader
+from .uciml import UcimlLoader
+from .cnae9 import Cnae9Loader
+from .parishousing import ParisHousingLoader
 
 
 class DataLoader:
@@ -14,11 +17,20 @@ class DataLoader:
             return MnistSeriesLoader(self.data_name)
         elif self.data_name == "celegans":
             return CelegansLoader()
+        elif self.data_name in [
+            "ionosphere",
+            "optical_recognition",
+            "raisin",
+            "htru2",
+        ]:
+            return UcimlLoader(self.data_name)
+        elif self.data_name == "parishousing":
+            return ParisHousingLoader()
+        elif self.data_name == "cnae9":
+            return Cnae9Loader()
+
         else:
             raise ValueError("Invalid type")
 
     def get_data(self) -> DataModel:
         return self.loader.get_data()
-
-    def get_precomputed_knn(self, n_neighbors: int = 15):
-        return self.loader.get_precomputed_knn(n_neighbors)
