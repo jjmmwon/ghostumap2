@@ -1,32 +1,30 @@
 import logging
 
-import numpy as np
-
+from benchmark.runner import benchmark_v0, benchmark_v1
 from benchmark.hyperparameters import generate_hyperparameter_comb
-from benchmark.runner import run_GhostUMAP, measure_accuracy
+from benchmark.utils import run_GhostUMAP, measure_accuracy
 from benchmark.save_manager import save_embeddings, save_results
 from rdumap.data import DataLoader
 
-logging.basicConfig(
-    filename="benchmark.log",
-    format="%(levelname)s: %(message)s",
-    level=logging.INFO,
-    filemode="a",
-)
 
-
-def main(data_name: str, base_settings: dict, param_grid: dict, iterations: int = 10):
+def main(
+    data_name: str,
+    base_settings: dict,
+    param_grid: dict,
+    iterations: int = 3,
+    version="v1",
+):
     # Load dataset
+    print(version)
 
     logging.info(f"Loading dataset: {data_name}")
     dl = DataLoader(data_name)
-
     X, y, legend, precomputed_knn = dl.get_data().values()
-
-    print(precomputed_knn)
 
     logging.info("Generating hyperparameter combinations.")
     hpram_comb = generate_hyperparameter_comb(base_settings, param_grid)
+
+    benchmark_func = benchmark_v0 if version == "v0" else benchmark_v1
 
     for hprams in hpram_comb:
         if hprams["ghost_gen"] >= hprams["init_dropping"]:
@@ -35,83 +33,45 @@ def main(data_name: str, base_settings: dict, param_grid: dict, iterations: int 
             )
             continue
 
-        results = []
         logging.info(f"Running benchmark for parameter set: {hprams}")
 
-        for i in range(iterations):
-            logging.info(f"Starting iteration {i + 1}/{iterations}.")
-            result_acc = run_GhostUMAP(
-                X,
-                hprams,
-                bm_type="accuracy",
-                precomputed_knn=precomputed_knn,
-                distance=0.1,
-            )
-            save_embeddings(result_acc, hprams, "accuracy", data_name)
+        results = benchmark_func(
+            data_name,
+            X,
+            precomputed_knn,
+            hprams,
+            iterations,
+        )
 
-            result_twd = run_GhostUMAP(
-                X, hprams, bm_type="time_with_dropping", precomputed_knn=precomputed_knn
-            )
-            save_embeddings(result_twd, hprams, "time_with_dropping", data_name)
-
-            result_twod = run_GhostUMAP(
-                X,
-                hprams,
-                bm_type="time_without_dropping",
-                precomputed_knn=precomputed_knn,
-            )
-            save_embeddings(result_twod, hprams, "time_without_dropping", data_name)
-
-            f1, precision, recall = measure_accuracy(
-                result_acc["unstable_ghosts"], result_acc["alive_ghosts"]
-            )
-            time_with_dropping = result_twd["opt_time"]
-            time_without_dropping = result_twod["opt_time"]
-
-            result = {
-                "data": data_name,
-                **hprams,
-                "iter": i,
-                "f1": f1,
-                "precision": precision,
-                "recall": recall,
-                "num_unstable_ghosts": np.sum(result_acc["unstable_ghosts"]),
-                "num_remaining_ghosts": np.sum(result_acc["alive_ghosts"]),
-                "common_ghosts": np.sum(
-                    np.logical_and(
-                        result_acc["unstable_ghosts"], result_acc["alive_ghosts"]
-                    )
-                ),
-                "time_with_dropping": time_with_dropping,
-                "time_without_dropping": time_without_dropping,
-            }
-
-            results.append(result)
-
-        save_results(data_name, results)
+        save_results(data_name, results, results_dir=f"results_{version}")
         logging.info("Results saved for current parameter set.")
-        results = []
 
 
 if __name__ == "__main__":
-    # data_name = ["celegans", "mnist", "fmnist", "kmnist"]
-    data_name = ["kmnist"]
+    logging.basicConfig(
+        filename="benchmark.log",
+        format="%(levelname)s: %(message)s",
+        level=logging.INFO,
+        filemode="a",
+    )
+
+    data_name = ["celegans", "mnist", "fmnist", "kmnist"]
+    # data_name = ["celegans"]
 
     base_settings = {
-        "n_ghosts": 16,
         "radii": 0.1,
         "sensitivity": 0.9,
         "mov_avg_weight": 0.9,
+        "ghost_gen": 0.2,
+        "init_dropping": 0.4,
     }
     param_grid = {
-        "ghost_gen": [0, 0.1, 0.2, 0.3],
-        # "ghost_gen": [0.1],
-        "init_dropping": [0.3, 0.4, 0.5, 0.6],
-        # "init_dropping": [0.5],
+        "n_ghosts": [8, 16, 32],
+        # "n_ghosts": [8],
     }
     print(data_name)
 
     for data in data_name:
         logging.info(f"Starting benchmark for dataset: {data}")
-        main(data, base_settings, param_grid)
+        main(data, base_settings, param_grid, iterations=3, version="v1")
         logging.info(f"Completed benchmark for dataset: {data}")

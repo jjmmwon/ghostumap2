@@ -705,8 +705,6 @@ def optimize_layout_euclidean_with_SH(
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
         if n in schedule:
-            print(n)
-            # print(len(np.where(alive_ghosts)[0]))
             rank, _ = _measure_instability(
                 original_embedding,
                 ghost_embeddings,
