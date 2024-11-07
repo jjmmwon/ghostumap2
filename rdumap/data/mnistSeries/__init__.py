@@ -48,15 +48,17 @@ label_dict = {
 
 
 class MnistSeriesLoader(BaseLoader):
-    def __init__(self, type: MnistType = "mnist"):
+    def __init__(self, name: MnistType = "mnist"):
         super().__init__()
-        self.type = type
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.type)
+        self.name = name
+        self.data_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), self.name
+        )
         self._load_data()
 
     def _load_data(self):
         paths = {
-            "data": os.path.join(self.data_path, f"{self.type}.npy"),
+            "data": os.path.join(self.data_path, f"{self.name}.npy"),
             "label": os.path.join(self.data_path, "label.npy"),
             "knn_dists": os.path.join(self.data_path, "knn_dists.npy"),
             "knn_indices": os.path.join(self.data_path, "knn_indices.npy"),
@@ -67,8 +69,8 @@ class MnistSeriesLoader(BaseLoader):
         self._label = (
             np.load(paths["label"]) if os.path.exists(paths["label"]) else None
         )
-        self._label = [label_dict[self.type][l] for l in self._label]
-        self._legend = list(label_dict[self.type].keys())
+
+        self._legend = list(label_dict[self.name].values())
 
         self._precomputed_knn = (
             (

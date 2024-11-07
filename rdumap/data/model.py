@@ -10,7 +10,16 @@ TprecomputedKnn = (
     | tuple[None, None, None]
 )
 
-TDataName = Literal["mnist", "fmnist", "kmnist", "celegans"]
+TDataName = Literal[
+    "mnist",
+    "fmnist",
+    "kmnist",
+    "celegans",
+    "ionosphere",
+    "optical_recognition",
+    "raisin",
+    "htru2",
+]
 
 
 class DataModel(TypedDict):
