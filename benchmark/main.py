@@ -1,6 +1,6 @@
 import logging
 
-from benchmark.runner import benchmark_v0, benchmark_v1
+from benchmark.runner import benchmark_v0, benchmark_v1, benchmark_v2
 from benchmark.hyperparameters import generate_hyperparameter_comb
 from benchmark.utils import run_GhostUMAP, measure_accuracy
 from benchmark.save_manager import save_embeddings, save_results
@@ -24,7 +24,11 @@ def main(
     logging.info("Generating hyperparameter combinations.")
     hpram_comb = generate_hyperparameter_comb(base_settings, param_grid)
 
-    benchmark_func = benchmark_v0 if version == "v0" else benchmark_v1
+    benchmark_func = {
+        "v0": benchmark_v0,
+        "v1": benchmark_v1,
+        "v2": benchmark_v2,
+    }.get(version, benchmark_v2)
 
     for hprams in hpram_comb:
         if hprams["ghost_gen"] >= hprams["init_dropping"]:
@@ -55,8 +59,19 @@ if __name__ == "__main__":
         filemode="a",
     )
 
-    data_name = ["celegans", "mnist", "fmnist", "kmnist"]
-    # data_name = ["celegans"]
+    data_name = [
+        "ionosphere",
+        "optical_recognition",
+        "raisin",
+        "htru2",
+        "parishousing",
+        "cnae9",
+        "celegans",
+        "mnist",
+        "fmnist",
+        "kmnist",
+    ]
+    # data_name = ["raisin"]
 
     base_settings = {
         "radii": 0.1,
@@ -73,5 +88,5 @@ if __name__ == "__main__":
 
     for data in data_name:
         logging.info(f"Starting benchmark for dataset: {data}")
-        main(data, base_settings, param_grid, iterations=3, version="v1")
+        main(data, base_settings, param_grid, iterations=3, version="v2")
         logging.info(f"Completed benchmark for dataset: {data}")

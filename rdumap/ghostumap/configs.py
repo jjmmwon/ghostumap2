@@ -2,7 +2,15 @@ from dataclasses import dataclass, field, asdict
 from typing import Literal, Optional
 
 
-Tbenchmark = Literal["None", "accuracy", "time_with_dropping", "time_without_dropping"]
+Tbenchmark = Literal[
+    "None",
+    "accuracy_dropping",
+    "time_with_dropping",
+    "accuracy_SH",
+    "time_with_SH",
+    "time_original_GU",
+    "original_UMAP",
+]
 
 
 @dataclass(frozen=True)

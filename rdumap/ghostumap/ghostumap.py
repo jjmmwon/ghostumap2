@@ -45,6 +45,7 @@ from .utils import _get_distance, _get_radii, drop_ghosts
 from .layouts import optimize_layout_euclidean
 from .layouts_for_BM import (
     optimize_layout_euclidean as optimize_layout_euclidean_dropping,
+    optimize_layout_euclidean_original,
     optimize_layout_euclidean_with_SH,
     optimize_layout_euclidean_v0 as optimize_layout_euclidean_for_BM_vanilla,
 )
@@ -300,6 +301,7 @@ def simplicial_set_embedding(
             "accuracy_SH": optimize_layout_euclidean_with_SH,
             "time_with_SH": optimize_layout_euclidean_with_SH,
             "time_original_GU": optimize_layout_euclidean_for_BM_vanilla,
+            "original_UMAP": optimize_layout_euclidean_original,
         }.get(bm_type, optimize_layout_euclidean_dropping)
 
         (original_embedding, ghost_embeddings, alive_ghosts), opt_time = opt_func(

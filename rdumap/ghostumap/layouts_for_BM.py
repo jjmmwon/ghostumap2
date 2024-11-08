@@ -724,6 +724,95 @@ def optimize_layout_euclidean_with_SH(
 
 
 @measure_time("")
+def optimize_layout_euclidean_original(
+    n_ghosts,
+    original_embedding,
+    head,
+    tail,
+    n_epochs,
+    n_vertices,
+    epochs_per_sample,
+    a,
+    b,
+    rng_state,
+    gamma=1.0,
+    initial_alpha=1.0,
+    negative_sample_rate=5.0,
+    parallel=False,
+    verbose=False,
+    tqdm_kwds=None,
+    move_other=False,
+):
+    config = get_config()
+    bm_type = config.bm_type
+    print(bm_type)
+
+    dim = original_embedding.shape[1]
+    alpha = initial_alpha
+
+    epochs_per_negative_sample = epochs_per_sample / negative_sample_rate
+    epoch_of_next_negative_sample = epochs_per_negative_sample.copy()
+    epoch_of_next_sample = epochs_per_sample.copy()
+
+    optimize_real_fn = numba.njit(
+        _optimize_real_layout_euclidean_single_epoch,
+        fastmath=True,
+        parallel=parallel,
+    )
+
+    if tqdm_kwds is None:
+        tqdm_kwds = {}
+
+    epochs_list = None
+
+    if isinstance(n_epochs, list):
+        epochs_list = n_epochs
+        n_epochs = max(epochs_list)
+
+    if "disable" not in tqdm_kwds:
+        tqdm_kwds["disable"] = not verbose
+
+    ghost_embeddings = np.array([])
+
+    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+    distance_list = []
+    thresholds = []
+
+    for n in tqdm(range(n_epochs), **tqdm_kwds):
+        optimize_real_fn(
+            original_embedding,
+            original_embedding,
+            head,
+            tail,
+            n_vertices,
+            epochs_per_sample,
+            a,
+            b,
+            rng_state,
+            gamma,
+            dim,
+            move_other,
+            alpha,
+            epochs_per_negative_sample,
+            epoch_of_next_negative_sample,
+            epoch_of_next_sample,
+            n,
+        )
+
+        alpha = initial_alpha * (1.0 - (float(n) / float(n_epochs)))
+
+        if verbose and n % int(n_epochs / 10) == 0:
+            print("\tcompleted ", n, " / ", n_epochs, "epochs")
+
+    set_results(
+        distance_list=np.array(distance_list),
+        threshold_list=np.array(thresholds),
+    )
+
+    return (original_embedding, ghost_embeddings, alive_ghosts)
+
+
+@measure_time("")
 def optimize_layout_euclidean_v0(
     n_ghosts,
     original_embedding,

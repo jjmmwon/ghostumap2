@@ -258,7 +258,7 @@ def _optimize_ghost_layout_euclidean_single_epoch(
                     other_ghost[d] += -grad_d * alpha
 
 
-@measure_time
+@measure_time("")
 def optimize_layout_euclidean(
     n_ghosts,
     original_embedding,

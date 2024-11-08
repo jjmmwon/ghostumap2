@@ -19,8 +19,8 @@ __pycache__
 *.npz
 *.csv
 *.data
-*.name
-rdumap/data/*.json
+*.names
+rdumap/data/**/*.json
 
 # log for benchmarking
 *.log
