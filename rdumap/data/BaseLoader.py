@@ -29,7 +29,7 @@ class BaseLoader(ABC):
             "knn_dists": os.path.join(self.base_path, "knn_dists.npy"),
         }
 
-        if not all(os.path.exists(paths[key]) for key in ["data", "label", "legend"]):
+        if not all(os.path.exists(path) for path in paths.values()):
             self.load_raw_data()
             return
 
@@ -62,15 +62,21 @@ class BaseLoader(ABC):
         return result
 
     def save_data(self, path):
-        np.save(os.path.join(path, "data.npy"), self._data)
-        np.save(os.path.join(path, "label.npy"), self._label)
+        save_if_not_exists(path, self._data)
+        save_if_not_exists(path, self._label)
 
         if self._precomputed_knn[0] is not None:
-            np.save(os.path.join(path, "knn_indices.npy"), self._precomputed_knn[0])
-            np.save(os.path.join(path, "knn_dists.npy"), self._precomputed_knn[1])
+            save_if_not_exists(
+                os.path.join(path, "knn_indices.npy"), self._precomputed_knn[0]
+            )
+            save_if_not_exists(
+                os.path.join(path, "knn_dists.npy"), self._precomputed_knn[1]
+            )
 
-        with open(os.path.join(path, "legend.json"), "w") as f:
-            json.dump({"legend": self._legend}, f)
+        legend_path = os.path.join(path, "legend.json")
+        if not os.path.exists(legend_path):
+            with open(os.path.join(path, "legend.json"), "w") as f:
+                json.dump({"legend": self._legend}, f)
 
     def scale_data(self, data: np.ndarray):
         from sklearn.preprocessing import StandardScaler
@@ -88,3 +94,8 @@ class BaseLoader(ABC):
         self._precomputed_knn = (reducer._knn_indices, reducer._knn_dists)
 
         return self._precomputed_knn
+
+
+def save_if_not_exists(file_path, data):
+    if not os.path.exists(file_path):
+        np.save(file_path, data)

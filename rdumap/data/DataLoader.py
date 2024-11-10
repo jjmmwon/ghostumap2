@@ -5,6 +5,7 @@ from .celegans import CelegansLoader
 from .uciml import UcimlLoader
 from .cnae9 import Cnae9Loader
 from .parishousing import ParisHousingLoader
+from .textEmbeddings import TextEmbeddingLoader
 
 
 class DataLoader:
@@ -29,6 +30,13 @@ class DataLoader:
         elif self.data_name == "cnae9":
             return Cnae9Loader()
 
+        elif self.data_name in [
+            "20ng",
+            "ag_news",
+            "amazon_polarity",
+            "yelp_review",
+        ]:
+            return TextEmbeddingLoader(self.data_name)
         else:
             raise ValueError("Invalid type")
 

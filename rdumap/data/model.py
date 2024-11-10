@@ -21,6 +21,10 @@ TDataName = Literal[
     "htru2",
     "parishousing",
     "cnae9",
+    "20ng",
+    "ag_news",
+    "amazon_polarity",
+    "yelp_review",
 ]
 
 
