@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from benchmark.runner import benchmark_v0, benchmark_v1, benchmark_v2
@@ -13,6 +14,7 @@ def main(
     param_grid: dict,
     iterations: int = 3,
     version="v1",
+    results_dir="results",
 ):
     # Load dataset
     print(version)
@@ -46,8 +48,7 @@ def main(
             hprams,
             iterations,
         )
-
-        save_results(data_name, results, results_dir=f"results_{version}")
+        save_results(data_name, results, results_dir=results_dir)
         logging.info("Results saved for current parameter set.")
 
 
@@ -59,17 +60,23 @@ if __name__ == "__main__":
         filemode="a",
     )
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     data_name = [
-        "ionosphere",
-        "optical_recognition",
-        "raisin",
-        "htru2",
-        "parishousing",
-        "cnae9",
+        # "ionosphere",
+        # "raisin",
         "celegans",
+        "parishousing",
+        "htru2",
+        "optical_recognition",
         "mnist",
         "fmnist",
         "kmnist",
+        "cnae9",
+        "20ng",
+        "ag_news",
+        "amazon_polarity",
+        # "yelp_review",
     ]
     # data_name = ["raisin"]
 
@@ -84,9 +91,15 @@ if __name__ == "__main__":
         "n_ghosts": [8, 16, 32],
         # "n_ghosts": [8],
     }
-    print(data_name)
 
     for data in data_name:
         logging.info(f"Starting benchmark for dataset: {data}")
-        main(data, base_settings, param_grid, iterations=3, version="v2")
+        main(
+            data,
+            base_settings,
+            param_grid,
+            iterations=1,
+            version="v2",
+            results_dir=f"results_{timestamp}",
+        )
         logging.info(f"Completed benchmark for dataset: {data}")
