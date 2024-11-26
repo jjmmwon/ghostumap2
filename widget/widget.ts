@@ -23,7 +23,12 @@ import { attachModelListener } from "@/eventHandler";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function renderWidget({ model, el }: RenderProps<IWidget>) {
-  const shadowRoot = el.attachShadow({ mode: "open" });
+  const shadowRoot = el.shadowRoot || el.attachShadow({ mode: "open" });
+
+  // 기존 내용 초기화
+  if (shadowRoot.childNodes.length > 0) {
+    shadowRoot.innerHTML = ""; // 또는 shadowRoot.replaceChildren();
+  }
 
   // Shadow DOM 내부 컨테이너 생성
   const widget = document.createElement("div");
