@@ -1,6 +1,5 @@
 import { IWidget } from "@/model";
 import { AnyModel } from "@anywidget/types";
-import { max } from "d3";
 import { html } from "lit-html";
 import { styleMap } from "lit-html/directives/style-map.js";
 
@@ -29,7 +28,10 @@ class Slider {
 
     return html`
       <div class="slider-container" style=${styleMap(containerStyle)}>
-        <label for="${this.id}">${this.label}</label>
+        <label for="${this.id}" id="${this.id}-value"
+          >${this.label}: ${displayValue}</label
+        >
+
         <input
           type="range"
           id="${this.id}"
@@ -42,7 +44,10 @@ class Slider {
             model.save_changes();
           }}"
         />
-        <span class="slider-value" id="${this.id}-value">${displayValue}</span>
+        <div style="display: flex; justify-content: space-between;">
+          <span>0</span>
+          <span>1</span>
+        </div>
       </div>
     `;
   }
