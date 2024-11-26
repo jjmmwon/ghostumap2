@@ -17,9 +17,11 @@ const widgetStyle = {
   justifyContent: "center",
   alignItems: "center",
   border: "none",
-  backgroundColor: "#f8f9fa",
+  width: "100%",
+  margin: 0,
+  padding: 0,
+  backgroundColor: "#fff",
   color: "#333",
-  padding: "20px",
 };
 
 const projectionStyle = {
