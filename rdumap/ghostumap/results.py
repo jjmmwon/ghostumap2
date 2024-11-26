@@ -9,6 +9,7 @@ class Result:
     opt_time: float = field(default=0.0)
     distance_list: np.ndarray = field(default_factory=lambda: np.array([]))
     threshold_list: np.ndarray = field(default_factory=lambda: np.array([]))
+    init_radii: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
 # Lazy initialization of config
@@ -28,6 +29,7 @@ def set_results(
     opt_time=None,
     distance_list=None,
     threshold_list=None,
+    init_radii=None,
     reinit: bool = False,
 ) -> None:
     global _result
@@ -45,6 +47,7 @@ def set_results(
         threshold_list=(
             threshold_list if threshold_list is not None else _result.threshold_list
         ),
+        init_radii=(init_radii if init_radii is not None else _result.init_radii),
     )
 
 

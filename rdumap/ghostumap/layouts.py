@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 from .time_checker import measure_time
 
-from .utils import drop_ghosts, _get_distance, sample_ghosts
+from .utils import compute_distances, drop_ghosts, get_distance, sample_ghosts
 
 from .configs import get_config
 from .results import set_results
@@ -147,7 +147,7 @@ def _optimize_real_layout_euclidean_single_epoch(
 def _optimize_ghost_layout_euclidean_single_epoch(
     ghost_embeddings,
     n_ghosts,
-    alive_ghosts,
+    ghost_mask,
     head_embedding,
     tail_embedding,
     head,
@@ -182,13 +182,13 @@ def _optimize_ghost_layout_euclidean_single_epoch(
         else:
             continue
 
-        # if not alive_ghosts[j]:
+        # if not ghost_mask[j]:
         #     continue
 
         current_orig = head_embedding[j]
         other_orig = tail_embedding[k]
 
-        # if alive_ghosts[j]:
+        # if ghost_mask[j]:
         if True:
             for g in range(n_ghosts):
                 current_ghost = ghost_embeddings[j][g]
@@ -240,7 +240,7 @@ def _optimize_ghost_layout_euclidean_single_epoch(
                             grad_d = 0
                         current_ghost[d] += grad_d * alpha
 
-        # if alive_ghosts[k] and move_other:
+        # if ghost_mask[k] and move_other:
         if True and move_other:
             for g in range(n_ghosts):
                 other_ghost = ghost_embeddings[k][g]
@@ -258,7 +258,6 @@ def _optimize_ghost_layout_euclidean_single_epoch(
                     other_ghost[d] += -grad_d * alpha
 
 
-@measure_time("")
 def optimize_layout_euclidean(
     n_ghosts,
     original_embedding,
@@ -379,27 +378,29 @@ def optimize_layout_euclidean(
     ghost_embeddings = None
 
     # for dropping ghosts
-    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+    ghost_mask = np.ones(n_vertices, dtype=np.bool_)
     dropping_log = np.ones(n_vertices) * n_epochs
     mov_avg_dist_list = []
     thresholds = []
 
     config = get_config()
-    (radii, sensitivity, ghost_gen, init_dropping, mov_avg_weight, _) = asdict(
-        config
-    ).values()
+    (radii, sensitivity, ghost_gen, dropping, init_dropping, mov_avg_weight, _) = (
+        asdict(config).values()
+    )
+    init_radii = None
 
     for n in tqdm(range(n_epochs), **tqdm_kwds):
         if ghost_embeddings is None and n >= int(n_epochs * ghost_gen):
             if verbose:
                 print(f"Generating ghosts at epoch {n}")
             ghost_embeddings = sample_ghosts(original_embedding, n_ghosts, r=radii)
+            init_radii = compute_distances(original_embedding, ghost_embeddings)
 
         if ghost_embeddings is not None:
             optimize_ghost_fn(
                 ghost_embeddings,
                 n_ghosts,
-                alive_ghosts,
+                ghost_mask,
                 original_embedding.astype(np.float32),
                 original_embedding.astype(np.float32),
                 head,
@@ -447,10 +448,10 @@ def optimize_layout_euclidean(
         if ghost_embeddings is not None:
             # print("v1")
             if len(mov_avg_dist_list) == 0:
-                distances = _get_distance(
+                distances = get_distance(
                     original_embedding,
                     ghost_embeddings,
-                    alive_ghosts,
+                    ghost_mask,
                     sensitivity=sensitivity,
                 )
 
@@ -459,10 +460,10 @@ def optimize_layout_euclidean(
 
             else:
                 distances = np.copy(mov_avg_dist_list[-1])
-                distances[alive_ghosts] = _get_distance(
+                distances[ghost_mask] = get_distance(
                     original_embedding,
                     ghost_embeddings,
-                    alive_ghosts,
+                    ghost_mask,
                     sensitivity=sensitivity,
                 )
 
@@ -475,21 +476,24 @@ def optimize_layout_euclidean(
                 thresholds.append(np.mean(mov_avg_dist))
 
         # dropping ghosts
-        if n >= int(n_epochs * init_dropping):
-            # print(f"Dropping ghosts at epoch {n}")
-            # print("thresholds", thresholds[-1])
-            alive_indices = np.where(alive_ghosts)[0]
-            dropped_idx = mov_avg_dist_list[-1][alive_ghosts] < thresholds[-1]
+        if dropping and n >= int(n_epochs * init_dropping):
+            active_indices = np.where(ghost_mask)[0]
+            dropped_idx = mov_avg_dist_list[-1][ghost_mask] < thresholds[-1]
 
-            alive_ghosts[alive_indices[dropped_idx]] = False
+            ghost_mask[active_indices[dropped_idx]] = False
 
             for id in np.where(dropping_log == n_epochs)[0]:
-                if not alive_ghosts[id]:
+                if not ghost_mask[id]:
                     dropping_log[id] = n
 
-    set_results(mov_avg_dist_list, dropping_log, thresholds)
+    set_results(
+        mov_avg_dist_list,
+        dropping_log,
+        thresholds,
+        init_radii=init_radii,
+    )
 
-    return (original_embedding, ghost_embeddings, alive_ghosts)
+    return (original_embedding, ghost_embeddings, ghost_mask)
 
 
 def optimize_layout_euclidean_v1(
@@ -548,7 +552,7 @@ def optimize_layout_euclidean_v1(
     if "disable" not in tqdm_kwds:
         tqdm_kwds["disable"] = not verbose
 
-    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+    ghost_mask = np.ones(n_vertices, dtype=np.bool_)
     distance_list = []
 
     config = get_config()
@@ -563,7 +567,7 @@ def optimize_layout_euclidean_v1(
         optimize_ghost_fn(
             ghost_embeddings,
             n_ghosts,
-            alive_ghosts,
+            ghost_mask,
             original_embedding.astype(np.float32),
             original_embedding.astype(np.float32),
             head,
@@ -608,10 +612,10 @@ def optimize_layout_euclidean_v1(
         if verbose and n % int(n_epochs / 10) == 0:
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
-        distances = _get_distance(
+        distances = get_distance(
             original_embedding,
             ghost_embeddings,
-            alive_ghosts,
+            ghost_mask,
             sensitivity=sensitivity,
         )
 
@@ -619,7 +623,7 @@ def optimize_layout_euclidean_v1(
 
     set_results(distance_list=distance_list)
 
-    return (original_embedding, ghost_embeddings, alive_ghosts)
+    return (original_embedding, ghost_embeddings, ghost_mask)
 
 
 def optimize_layout_euclidean_v2(
@@ -681,7 +685,7 @@ def optimize_layout_euclidean_v2(
 
     ghost_embeddings = None
 
-    alive_ghosts = np.ones(n_vertices, dtype=np.bool_)
+    ghost_mask = np.ones(n_vertices, dtype=np.bool_)
     distance_list = []
 
     config = get_config()
@@ -698,7 +702,7 @@ def optimize_layout_euclidean_v2(
             optimize_ghost_fn(
                 ghost_embeddings,
                 n_ghosts,
-                alive_ghosts,
+                ghost_mask,
                 original_embedding.astype(np.float32),
                 original_embedding.astype(np.float32),
                 head,
@@ -744,10 +748,10 @@ def optimize_layout_euclidean_v2(
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
         if ghost_embeddings is not None:
-            distances = _get_distance(
+            distances = get_distance(
                 original_embedding,
                 ghost_embeddings,
-                alive_ghosts,
+                ghost_mask,
                 sensitivity=sensitivity,
             )
 
@@ -755,4 +759,4 @@ def optimize_layout_euclidean_v2(
 
     set_results(distance_list=distance_list)
 
-    return (original_embedding, ghost_embeddings, alive_ghosts)
+    return (original_embedding, ghost_embeddings, ghost_mask)

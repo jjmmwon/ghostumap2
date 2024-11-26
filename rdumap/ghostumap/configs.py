@@ -16,10 +16,11 @@ Tbenchmark = Literal[
 @dataclass(frozen=True)
 class Config:
     radii: float = field(default=0.1)
-    sensitivity: float = field(default=0.9)
+    sensitivity: float = field(default=1)
     ghost_gen: float = field(default=0.25)
+    dropping: bool = field(default=True)
     init_dropping: float = field(default=0.5)
-    mov_avg_weight: float = field(default=0.9)
+    smoothing_factor: float = field(default=0.9)
     bm_type: Tbenchmark = field(default="None")
 
 
@@ -36,9 +37,10 @@ def get_config() -> Config:
 def set_config(
     radii,
     sensitivity,
-    ghost_gen,
-    init_dropping,
-    mov_avg_weight=0.9,
+    ghost_gen=0.2,
+    dropping=True,
+    init_dropping=0.4,
+    smoothing_factor=0.9,
     bm_type: Tbenchmark = "None",
 ) -> None:
     global _config
@@ -49,8 +51,9 @@ def set_config(
         radii=radii,
         sensitivity=sensitivity,
         ghost_gen=ghost_gen,
+        dropping=dropping,
         init_dropping=init_dropping,
-        mov_avg_weight=mov_avg_weight,
+        smoothing_factor=smoothing_factor,
         bm_type=bm_type,
     )
 

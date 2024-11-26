@@ -15,7 +15,7 @@ class TResult(TypedDict):
     opt_time: float
     original_embedding: np.ndarray
     ghost_embedding: np.ndarray
-    alive_ghosts: np.ndarray
+    ghost_mask: np.ndarray
     unstable_ghosts: np.ndarray
     distance_list: np.ndarray
     threshold_list: np.ndarray
