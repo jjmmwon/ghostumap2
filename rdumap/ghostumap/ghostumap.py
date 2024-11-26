@@ -2,6 +2,7 @@ import time
 from warnings import warn
 import joblib
 
+
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import KDTree
@@ -40,7 +41,7 @@ from scipy.sparse import tril as sparse_tril, triu as sparse_triu
 from pynndescent.distances import named_distances as pynn_named_distances
 from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_distances
 
-from .utils import _get_distance, _get_radii, drop_ghosts
+from .utils import get_distance, compute_distances, drop_ghosts
 
 from .layouts import optimize_layout_euclidean
 from .layouts_for_BM import (
@@ -52,6 +53,8 @@ from .layouts_for_BM import (
 
 from .configs import get_config as _get_config, set_config
 from .results import get_results as _get_results, set_results
+from .widget import Widget
+from IPython.display import display
 
 
 def simplicial_set_embedding(
@@ -273,26 +276,24 @@ def simplicial_set_embedding(
     bm_type = _get_config().bm_type
 
     if bm_type == "None":
-        (original_embedding, ghost_embeddings, alive_ghosts) = (
-            optimize_layout_euclidean(
-                n_ghosts,
-                embedding,
-                head,
-                tail,
-                n_epochs,
-                n_vertices,
-                epochs_per_sample,
-                a,
-                b,
-                rng_state,
-                gamma,
-                initial_alpha,
-                negative_sample_rate,
-                parallel=parallel,
-                verbose=verbose,
-                tqdm_kwds=tqdm_kwds,
-                move_other=True,
-            )
+        (original_embedding, ghost_embeddings, ghost_mask) = optimize_layout_euclidean(
+            n_ghosts,
+            embedding,
+            head,
+            tail,
+            n_epochs,
+            n_vertices,
+            epochs_per_sample,
+            a,
+            b,
+            rng_state,
+            gamma,
+            initial_alpha,
+            negative_sample_rate,
+            parallel=parallel,
+            verbose=verbose,
+            tqdm_kwds=tqdm_kwds,
+            move_other=True,
         )
     else:
         opt_func = {
@@ -304,7 +305,7 @@ def simplicial_set_embedding(
             "original_UMAP": optimize_layout_euclidean_original,
         }.get(bm_type, optimize_layout_euclidean_dropping)
 
-        (original_embedding, ghost_embeddings, alive_ghosts), opt_time = opt_func(
+        (original_embedding, ghost_embeddings, ghost_mask), opt_time = opt_func(
             n_ghosts,
             embedding,
             head,
@@ -326,7 +327,7 @@ def simplicial_set_embedding(
 
         set_results(opt_time=opt_time)
 
-    return original_embedding, ghost_embeddings, alive_ghosts, aux_data
+    return original_embedding, ghost_embeddings, ghost_mask, aux_data
 
 
 class GhostUMAP(UMAP):
@@ -1095,7 +1096,7 @@ class GhostUMAP(UMAP):
             (
                 self.original_embedding,
                 self.ghost_embeddings,
-                self.alive_ghosts,
+                self.ghost_mask,
                 aux_data,
             ) = self._fit_embed_data(
                 self._raw_data[index],
@@ -1145,11 +1146,14 @@ class GhostUMAP(UMAP):
         force_all_finite: bool = True,
         n_ghosts: int = 8,
         radii: float = 0.1,
-        sensitivity: float = 0.9,
-        ghost_gen: float = 0.1,
-        init_dropping: float = 0.5,
-        mov_avg_weight: float = 0.9,
-        bm_type: str = "None",
+        sensitivity: float = 1,
+        ghost_gen: float = 0.2,
+        dropping: bool = True,
+        init_dropping: float = 0.4,
+        # use_widget: bool = True,
+        # title=None,
+        # label=None,
+        # legend=None,
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1190,9 +1194,10 @@ class GhostUMAP(UMAP):
             radii=radii,
             sensitivity=sensitivity,
             ghost_gen=ghost_gen,
+            dropping=dropping,
             init_dropping=init_dropping,
-            mov_avg_weight=mov_avg_weight,
-            bm_type=bm_type,
+            smoothing_factor=0.9,
+            bm_type="None",
         )
 
         if n_ghosts < 1:
@@ -1201,37 +1206,40 @@ class GhostUMAP(UMAP):
         y = None
         self.fit(X, y, force_all_finite, n_ghosts)
 
-        return (self.original_embedding, self.ghost_embeddings, self.alive_ghosts)
+        # if use_widget:
+        #     self.add_embedding(title=title, label=label, legend=legend)
+
+        return (self.original_embedding, self.ghost_embeddings, self.ghost_mask)
 
     def get_radii(self) -> np.ndarray:
         if not hasattr(self, "original_embedding"):
             raise ValueError("The model has not been fitted yet.")
 
-        return _get_radii(self.original_embedding, self.ghost_embeddings)
+        return compute_distances(self.original_embedding, self.ghost_embeddings)
 
     def get_unstable_ghosts(
-        self, distance: float = 0.1, sensitivity: float = 0.9
+        self, distance: float = 0.1, sensitivity: float = 1
     ) -> np.ndarray:
         if not hasattr(self, "original_embedding"):
             raise ValueError("The model has not been fitted yet.")
 
-        alive_ghosts = np.ones(self.original_embedding.shape[0], dtype=bool)
+        ghost_mask = np.ones(self.original_embedding.shape[0], dtype=bool)
 
-        alive_ghosts = drop_ghosts(
+        ghost_mask = drop_ghosts(
             self.original_embedding,
             self.ghost_embeddings,
-            alive_ghosts,
+            ghost_mask,
             distance=distance,
             sensitivity=sensitivity,
         )
 
-        return alive_ghosts
+        return ghost_mask
 
-    def get_distances(self, sensitivity: float = 0.9) -> np.ndarray:
-        return _get_distance(
+    def get_distances(self, sensitivity: float = 1) -> np.ndarray:
+        return get_distance(
             self.original_embedding,
             self.ghost_embeddings,
-            self.alive_ghosts,
+            self.ghost_mask,
             sensitivity,
         )
 
@@ -1240,3 +1248,59 @@ class GhostUMAP(UMAP):
 
     def get_config(self):
         return _get_config()
+
+    def visualize(self, title=None, label=None, legend=None):
+        """Creates and returns an interactive visualization widget.
+
+        The widget will be automatically displayed in Jupyter environments.
+        """
+
+        widget = Widget(
+            original_embedding=self.original_embedding,
+            ghost_embedding=self.ghost_embeddings,
+            neighbors=self._knn_indices,
+            label=label,
+            title=title,
+            legend=legend,
+        )
+        return widget
+
+    def add_embedding(
+        self,
+        original_embedding=None,
+        ghost_embeddings=None,
+        neighbors=None,
+        title=None,
+        label=None,
+        legend=None,
+    ):
+        print(original_embedding)
+        print(self.original_embedding)
+        if original_embedding and ghost_embeddings and neighbors:
+            self._widget.add_embedding(
+                original_embedding=original_embedding,
+                ghost_embedding=ghost_embeddings,
+                neighbors=neighbors,
+                title=title,
+                label=label,
+                legend=legend,
+            )
+
+            return self._widget
+
+        self._widget.add_embedding(
+            original_embedding=self.original_embedding,
+            ghost_embedding=self.ghost_embeddings,
+            neighbors=self._knn_indices,
+            title=title,
+            label=label,
+            legend=legend,
+        )
+
+        return self._widget
+
+    def widget(self):
+        if len(self._widget.embedding_set) == 0:
+            raise ValueError("No embedding has been added to the widget.")
+
+        return self._widget
