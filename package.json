@@ -1,4 +1,5 @@
 {
+	"name": "widget",
 	"type": "module",
 	"scripts": {
 		"dev:esbuild": "concurrently \"npm run build -- --sourcemap=inline --watch\" \"ANYWIDGET_HMR=1 hatch run jupyter lab\"",

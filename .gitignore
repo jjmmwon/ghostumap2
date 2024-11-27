@@ -5,7 +5,6 @@ dist
 
 ghostumap/static
 
-/data
 
 # Python
 __pycache__
@@ -20,7 +19,7 @@ __pycache__
 *.csv
 *.data
 *.names
-rdumap/data/**/*.json
+data/**/*.json
 
 # log for benchmarking
 *.log
