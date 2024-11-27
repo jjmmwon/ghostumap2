@@ -2,7 +2,7 @@
 	"type": "module",
 	"scripts": {
 		"dev:esbuild": "concurrently \"npm run build -- --sourcemap=inline --watch\" \"ANYWIDGET_HMR=1 hatch run jupyter lab\"",
-		"build:esbuild": "esbuild widget/widget.ts --minify --format=esm --bundle --outdir=rdumap/static",
+		"build:esbuild": "esbuild widget/widget.ts --minify --format=esm --bundle --outdir=ghostumap/static",
 		"dev": "concurrently \"vite\" \"ANYWIDGET_HMR=1 hatch run jupyter lab\"",
 		"build": "vite build",
 		"typecheck": "tsc --noEmit"

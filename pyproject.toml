@@ -25,12 +25,12 @@ features = ["dev"]
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["rdumap/static/*"]
+artifacts = ["ghostumap/static/*"]
 
 [tool.hatch.build.hooks.jupyter-builder]
 build-function = "hatch_jupyter_builder.npm_builder"
-ensured-targets = ["rdumap/static/widget.js"]
-skip-if-exists = ["rdumap/static/widget.js"]
+ensured-targets = ["ghostumap/static/widget.js"]
+skip-if-exists = ["ghostumap/static/widget.js"]
 dependencies = ["hatch-jupyter-builder>=0.5.0"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]

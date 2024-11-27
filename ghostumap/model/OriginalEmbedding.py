@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from rdumap.ghostumap.utils import compute_distances as compute_distance
+from ghostumap.utils import compute_distances as compute_distance
 
 
 @dataclass

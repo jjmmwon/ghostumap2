@@ -20,7 +20,7 @@ class EmbeddingSetInput(TypedDict):
 
 
 try:
-    __version__ = importlib.metadata.version("rdumap")
+    __version__ = importlib.metadata.version("ghostumap")
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 

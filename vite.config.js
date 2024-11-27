@@ -3,7 +3,7 @@ import anywidget from "@anywidget/vite";
 
 export default defineConfig({
   build: {
-    outDir: "rdumap/ghostumap/static",
+    outDir: "ghostumap/static",
     lib: {
       entry: ["widget/widget.ts"],
       formats: ["es"],
