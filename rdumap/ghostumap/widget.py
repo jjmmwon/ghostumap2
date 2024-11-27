@@ -5,6 +5,7 @@ from typing import List, TypedDict
 import anywidget
 import traitlets
 import numpy as np
+import os
 
 from .model import EmbeddingSet
 
@@ -25,8 +26,12 @@ except importlib.metadata.PackageNotFoundError:
 
 
 class Widget(anywidget.AnyWidget):
-    _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
-    # _css = pathlib.Path(__file__).parent / "static" / "widget.css"
+    _esm = (
+        pathlib.Path(__file__).parent / "static" / "widget.js"
+        if not os.getenv("ANYWIDGET_HMR")
+        else "http://localhost:5173/widget/widget.ts?anywidget"
+    )
+    _css = pathlib.Path(__file__).parent / "static" / "widget.css"
 
     width = traitlets.Int(300).tag(sync=True)
     height = traitlets.Int(300).tag(sync=True)
@@ -204,3 +209,11 @@ class Widget(anywidget.AnyWidget):
             if value is None:
                 raise ValueError(f"Parameter '{key}' cannot be None")
             setattr(self, key, value)
+
+    def _repr_html_(self):
+        """IPython display representation"""
+        mimebundle = self._repr_mimebundle_()
+        if "text/html" in mimebundle[0]:
+            return mimebundle[0]["text/html"]
+        else:
+            return repr(self)

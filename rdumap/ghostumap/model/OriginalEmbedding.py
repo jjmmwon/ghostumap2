@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from rdumap.ghostumap.utils import _get_radii as get_radii
+from rdumap.ghostumap.utils import compute_distances as compute_distance
 
 
 @dataclass
@@ -45,7 +45,7 @@ class OriginalEmbedding:
                 zip(
                     original_embedding[:, 0],
                     original_embedding[:, 1],
-                    get_radii(original_embedding, ghost_embedding),
+                    compute_distance(original_embedding, ghost_embedding),
                     label,
                     neighbors,
                 )
