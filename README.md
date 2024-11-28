@@ -1,6 +1,6 @@
 <p align="center">
   <h2 align="center">GhostUMAP2</h2>
-	<h3 align="center">Ensuring the Stability of Dimensionality Reduction with GhostUMAP</h3>
+	<h3 align="center">Measuring and Analyzing <i>(r,d)</i>-Stability of UMAP</h3>
 </p>
 
 ### Installation
