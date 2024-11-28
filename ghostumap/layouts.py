@@ -7,7 +7,13 @@ from tqdm.auto import tqdm
 
 from .time_checker import measure_time
 
-from .utils import compute_distances, drop_ghosts, get_distance, sample_ghosts
+from .utils import (
+    _get_max_extent,
+    compute_distances,
+    drop_ghosts,
+    get_distance,
+    sample_ghosts,
+)
 
 from .configs import get_config
 from .results import set_results
@@ -394,7 +400,9 @@ def optimize_layout_euclidean(
             if verbose:
                 print(f"Generating ghosts at epoch {n}")
             ghost_embeddings = sample_ghosts(original_embedding, n_ghosts, r=radii)
-            init_radii = compute_distances(original_embedding, ghost_embeddings)
+            init_radii = compute_distances(
+                original_embedding, ghost_embeddings
+            ) / _get_max_extent(original_embedding)
 
         if ghost_embeddings is not None:
             optimize_ghost_fn(
@@ -556,7 +564,7 @@ def optimize_layout_euclidean_v1(
     distance_list = []
 
     config = get_config()
-    radii, sensitivity = config.radii, config.sensitivity
+    radii, sensitivity = config.r, config.sensitivity
 
     ghost_embeddings = sample_ghosts(
         original_embedding, n_ghosts, r=radii
@@ -689,7 +697,7 @@ def optimize_layout_euclidean_v2(
     distance_list = []
 
     config = get_config()
-    radii, sensitivity, ghost_gen = config.radii, config.sensitivity, config.ghost_gen
+    radii, sensitivity, ghost_gen = config.r, config.sensitivity, config.ghost_gen
 
     for n in tqdm(range(n_epochs), **tqdm_kwds):
 

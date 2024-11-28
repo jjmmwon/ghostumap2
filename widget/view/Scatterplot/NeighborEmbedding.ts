@@ -7,7 +7,10 @@ class NeighborEmbedding {
   private unstableList: number[] = [];
 
   constructor(parent: d3.Selection<SVGGElement, undefined, null, undefined>) {
-    this.group = parent.append("g").attr("class", "neighborEmbedding");
+    this.group = parent
+      .append("g")
+      .attr("class", "neighborEmbedding")
+      .attr("visibility", "hidden");
   }
 
   private renderNeighbors(
@@ -26,7 +29,7 @@ class NeighborEmbedding {
       .join("path")
       .attr("pointer-events", "none")
       .attr("stroke-width", 1)
-      .attr("d", d3.symbol(d3.symbolWye).size(150))
+      .attr("d", d3.symbol(d3.symbolWye).size(200))
       .attr("transform", (d) => `translate(${xScale(d.x)},${yScale(d.y)})`)
       .attr("fill", (d) => colorScale[d.label])
       .attr("stroke", "black");

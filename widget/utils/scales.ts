@@ -6,7 +6,8 @@ export const getScales = (
   width: number,
   height: number,
   legend: string[],
-  colors: { [key: string]: string }
+  colors: { [key: string]: string },
+  radius: number
 ): IScale => {
   const [xMin, xMax] = d3.extent(origEmb, (d) => d.x) as [number, number];
   const [yMin, yMax] = d3.extent(origEmb, (d) => d.y) as [number, number];
@@ -32,6 +33,11 @@ export const getScales = (
     });
   }
 
+  let ghostColorScale = d3
+    .scaleSequential()
+    .domain([radius, 0]) // Input range
+    .interpolator(d3.interpolateViridis);
+
   const range = {
     xMin: xMin,
     xMax: xMax,
@@ -39,5 +45,5 @@ export const getScales = (
     yMax: yMax,
   };
 
-  return { xScale, yScale, colorScale, range };
+  return { xScale, yScale, colorScale, range, ghostColorScale };
 };

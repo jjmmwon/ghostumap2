@@ -5,8 +5,9 @@ import { styleMap } from "lit-html/directives/style-map.js";
 import * as d3 from "d3";
 
 const containerStyle = {
-  height: "200px",
-  "max-width": "200px",
+  height: "100%",
+  maxHeight: "360px",
+  "max-width": "250px",
   "overflow-y": "auto",
   border: "1px solid #ccc",
   padding: "5px",

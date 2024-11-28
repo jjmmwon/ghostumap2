@@ -12,18 +12,18 @@ class GhostEmbedding {
 
   renderGhosts(id: number, ghostEmb: IGhostPoint[], scales: IScale) {
     const points = ghostEmb.find((d) => d.id === id)?.coords || [];
-    const label = ghostEmb.find((d) => d.id === id)?.label || "";
+    // const label = ghostEmb.find((d) => d.id === id)?.label || "";
+    console.log(points.map((d) => d.r));
 
     this.group
       .append("g")
-      .attr("id", `ghost-${id}`)
       .selectAll("path")
       .data(points)
       .join("path")
       .attr("pointer-events", "none")
       .attr("stroke-width", 1)
-      .attr("d", d3.symbol(d3.symbolTriangle).size(150))
-      .attr("fill", scales.colorScale[label])
+      .attr("d", d3.symbol(d3.symbolTriangle).size(300))
+      .attr("fill", (d) => scales.ghostColorScale(d.r))
       .attr(
         "transform",
         (d) => `translate(${scales.xScale(d.x)},${scales.yScale(d.y)})`

@@ -5,6 +5,7 @@ interface IEmbeddingSet {
   original_embedding: IOriginalPoint[];
   ghost_embedding: IGhostPoint[];
   n_ghosts: number;
+  r: number;
   title: string;
   legend: string[];
   colors: { [key: string]: string } | {};

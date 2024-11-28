@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import anywidget from "@anywidget/vite";
 
 export default defineConfig({
+  server: {
+    hmr: {
+      overlay: false,
+    },
+  },
   build: {
     outDir: "ghostumap/static",
     lib: {

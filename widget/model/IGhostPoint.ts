@@ -1,6 +1,7 @@
 interface IPosition {
   x: number;
   y: number;
+  r: number;
 }
 
 interface IGhostPoint {

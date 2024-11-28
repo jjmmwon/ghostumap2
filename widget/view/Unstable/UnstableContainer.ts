@@ -14,6 +14,11 @@ const titleStyle = {
   "font-weight": "bold",
 };
 
+const unstableContainerStyle = {
+  maxWidth: "300px",
+  width: "250px",
+};
+
 export default class UnstableContainer {
   private container: HTMLDivElement;
   private unstableCounter: UnstableCounter;
@@ -48,12 +53,14 @@ export default class UnstableContainer {
     updateUnstList: (idList: number[]) => void
   ): HTMLDivElement {
     const template = html`
-      <div style=${styleMap(titleStyle)}>Unstables</div>
-      <div style=${styleMap(componentStyle)}>
-        ${this.unstableCounter.render(numUnstables, percentUnstables)}
-      </div>
-      <div style=${styleMap(componentStyle)}>
-        ${this.unstableIDList.render(unstEmb, getUnstList, updateUnstList)}
+      <div style=${styleMap(unstableContainerStyle)}>
+        <div style=${styleMap(titleStyle)}>Unstable Points</div>
+        <div style=${styleMap(componentStyle)}>
+          ${this.unstableCounter.render(numUnstables, percentUnstables)}
+        </div>
+        <div style=${styleMap(componentStyle)}>
+          ${this.unstableIDList.render(unstEmb, getUnstList, updateUnstList)}
+        </div>
       </div>
     `;
 

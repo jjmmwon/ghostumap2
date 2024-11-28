@@ -1145,15 +1145,11 @@ class GhostUMAP(UMAP):
         X: np.ndarray,
         force_all_finite: bool = True,
         n_ghosts: int = 8,
-        radii: float = 0.1,
+        r: float = 0.1,
         sensitivity: float = 1,
         ghost_gen: float = 0.2,
         dropping: bool = True,
         init_dropping: float = 0.4,
-        # use_widget: bool = True,
-        # title=None,
-        # label=None,
-        # legend=None,
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1191,7 +1187,7 @@ class GhostUMAP(UMAP):
 
         """
         set_config(
-            radii=radii,
+            r=r,
             sensitivity=sensitivity,
             ghost_gen=ghost_gen,
             dropping=dropping,
@@ -1202,12 +1198,9 @@ class GhostUMAP(UMAP):
 
         if n_ghosts < 1:
             raise ValueError("n_ghosts should be greater than 0")
-
+        self.radius = r
         y = None
         self.fit(X, y, force_all_finite, n_ghosts)
-
-        # if use_widget:
-        #     self.add_embedding(title=title, label=label, legend=legend)
 
         return (self.original_embedding, self.ghost_embeddings, self.ghost_mask)
 
@@ -1249,18 +1242,36 @@ class GhostUMAP(UMAP):
     def get_config(self):
         return _get_config()
 
-    def visualize(self, title=None, label=None, legend=None):
+    def visualize(self, label=None, legend=None):
         """Creates and returns an interactive visualization widget.
 
         The widget will be automatically displayed in Jupyter environments.
         """
+        init_radii = _get_results().init_radii
 
         widget = Widget(
             original_embedding=self.original_embedding,
             ghost_embedding=self.ghost_embeddings,
-            neighbors=self._knn_indices,
+            r=self.radius,
+            init_radii=init_radii,
+            neighbors=(
+                self._knn_indices
+                if hasattr(self, "_knn_indices")
+                else self.get_NN_for_small_data()
+            ),
             label=label,
-            title=title,
+            # title=title,
             legend=legend,
         )
         return widget
+
+    def get_NN_for_small_data(self):
+        from sklearn.neighbors import NearestNeighbors
+
+        nn = NearestNeighbors(n_neighbors=self._n_neighbors, metric=self.metric)
+
+        nn.fit(self._raw_data)
+
+        _, indices = nn.kneighbors(self._raw_data)
+
+        return indices

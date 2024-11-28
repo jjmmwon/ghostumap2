@@ -37,6 +37,9 @@ class OriginalEmbedding:
         if label is None:
             label = ["None"] * len(original_embedding)
 
+        radii = compute_distance(original_embedding, ghost_embedding)
+        radii = np.sort(radii, axis=1)
+
         return [
             OriginalPointModel(
                 id=i, x=x, y=y, radii=r.tolist(), label=str(l), neighbors=n.tolist()
@@ -45,7 +48,7 @@ class OriginalEmbedding:
                 zip(
                     original_embedding[:, 0],
                     original_embedding[:, 1],
-                    compute_distance(original_embedding, ghost_embedding),
+                    radii,
                     label,
                     neighbors,
                 )

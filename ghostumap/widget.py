@@ -13,6 +13,8 @@ from .model import EmbeddingSet
 class EmbeddingSetInput(TypedDict):
     original_embedding: np.ndarray
     ghost_embedding: np.ndarray
+    r: float
+    init_radii: np.ndarray
     neighbors: np.ndarray | list[list[int]]
     title: str | None
     legend: list[str] | None
@@ -42,9 +44,10 @@ class Widget(anywidget.AnyWidget):
 
     embedding_set: list[EmbeddingSet] = traitlets.List([]).tag(sync=True)
 
+    r = traitlets.Float(0.1).tag(sync=True)
     distance = traitlets.Float(0.1).tag(sync=True)
     sensitivity = traitlets.Float(0.9).tag(sync=True)
-    show_neighbors = traitlets.Bool(True).tag(sync=True)
+    show_neighbors = traitlets.Bool(True).tag(sync=False)
     show_ghosts = traitlets.Bool(True).tag(sync=True)
     show_unstables = traitlets.Bool(True).tag(sync=True)
     embedding_id = traitlets.Int(0).tag(sync=True)
@@ -54,16 +57,18 @@ class Widget(anywidget.AnyWidget):
         embedding_set: list[EmbeddingSetInput] | EmbeddingSetInput | None = None,
         original_embedding: np.ndarray = None,
         ghost_embedding: np.ndarray = None,
+        r: float = 0.1,
+        init_radii: np.ndarray = None,
         neighbors: np.ndarray = None,
         label: np.ndarray | list[str] = None,
         title: str = None,
         legend: list[str] = None,
         sensitivity: float = 0.9,
         distance: float = 0.1,
-        width: int = 500,
-        height: int = 500,
-        legend_width: int = 250,
-        legend_height: int = 500,
+        width: int = 600,
+        height: int = 600,
+        legend_width: int = 300,
+        legend_height: int = 600,
         *args,
         **kwargs,
     ):
@@ -76,11 +81,15 @@ class Widget(anywidget.AnyWidget):
 
         self.sensitivity = sensitivity
         self.distance = distance
+        self.r = r
+        self.init_radii = init_radii
 
         self.embedding_set = self._process_embedding(
             embedding=embedding_set,
             original_embedding=original_embedding,
             ghost_embedding=ghost_embedding,
+            r=r,
+            init_radii=init_radii,
             neighbors=neighbors,
             label=label,
             title=title,
@@ -92,6 +101,8 @@ class Widget(anywidget.AnyWidget):
         embedding: list[EmbeddingSetInput] | EmbeddingSetInput | None = None,
         original_embedding: np.ndarray = None,
         ghost_embedding: np.ndarray = None,
+        r: float = 0.1,
+        init_radii: np.ndarray = None,
         neighbors: np.ndarray = None,
         label: np.ndarray | list[str] = None,
         title: str = None,
@@ -102,6 +113,8 @@ class Widget(anywidget.AnyWidget):
                 embedding=embedding,
                 original_embedding=original_embedding,
                 ghost_embedding=ghost_embedding,
+                r=r,
+                init_radii=init_radii,
                 neighbors=neighbors,
                 label=label,
                 title=title,
@@ -114,6 +127,8 @@ class Widget(anywidget.AnyWidget):
         embedding: list[EmbeddingSetInput] | EmbeddingSetInput | None = None,
         original_embedding: np.ndarray | None = None,
         ghost_embedding: np.ndarray | None = None,
+        r: float = 0.1,
+        init_radii: np.ndarray = None,
         neighbors: np.ndarray | list[list[int]] | None = None,
         label: np.ndarray | list[str] | None = None,
         title: str | None = None,
@@ -125,6 +140,8 @@ class Widget(anywidget.AnyWidget):
                 EmbeddingSet(
                     original_embedding=embedding["original_embedding"],
                     ghost_embedding=embedding["ghost_embedding"],
+                    r=embedding.get("r"),
+                    init_radii=embedding.get("init_radii"),
                     neighbors=embedding["neighbors"],
                     label=embedding.get("label"),
                     title=embedding.get("title"),
@@ -138,6 +155,8 @@ class Widget(anywidget.AnyWidget):
                 EmbeddingSet(
                     original_embedding=emb["original_embedding"],
                     ghost_embedding=emb["ghost_embedding"],
+                    r=emb.get("r"),
+                    init_radii=emb.get("init_radii"),
                     neighbors=emb["neighbors"],
                     label=emb.get("label"),
                     title=emb.get("title"),
@@ -156,6 +175,8 @@ class Widget(anywidget.AnyWidget):
                 EmbeddingSet(
                     original_embedding=original_embedding,
                     ghost_embedding=ghost_embedding,
+                    r=r,
+                    init_radii=init_radii,
                     neighbors=neighbors,
                     label=label,
                     title=title,

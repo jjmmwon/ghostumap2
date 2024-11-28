@@ -10,11 +10,12 @@ export const prepareEmbeddingInfo = (model: AnyModel<IWidget>) => {
     original_embedding: origEmb,
     ghost_embedding: ghostEmb,
     n_ghosts: nGhosts,
+    r: radius,
     legend,
     colors,
   } = model.get("embedding_set")[embeddingID];
 
-  const scales = getScales(origEmb, width, height, legend, colors);
+  const scales = getScales(origEmb, width, height, legend, colors, radius);
   const range = scales.range;
 
   const distance = model.get("distance");
@@ -32,6 +33,7 @@ export const prepareEmbeddingInfo = (model: AnyModel<IWidget>) => {
   return {
     origEmb,
     ghostEmb,
+    radius,
     unstEmb,
     scales,
     range,

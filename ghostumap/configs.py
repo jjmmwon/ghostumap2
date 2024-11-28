@@ -15,7 +15,7 @@ Tbenchmark = Literal[
 
 @dataclass(frozen=True)
 class Config:
-    radii: float = field(default=0.1)
+    r: float = field(default=0.1)
     sensitivity: float = field(default=1)
     ghost_gen: float = field(default=0.25)
     dropping: bool = field(default=True)
@@ -35,7 +35,7 @@ def get_config() -> Config:
 
 
 def set_config(
-    radii,
+    r,
     sensitivity,
     ghost_gen=0.2,
     dropping=True,
@@ -48,7 +48,7 @@ def set_config(
     #     raise ValueError("Config already exists")
 
     _config = Config(
-        radii=radii,
+        r=r,
         sensitivity=sensitivity,
         ghost_gen=ghost_gen,
         dropping=dropping,

@@ -6,6 +6,7 @@ class Legend {
   svg: d3.Selection<SVGSVGElement, undefined, null, undefined>;
   symbolLegend: d3.Selection<SVGGElement, undefined, null, undefined>;
   labelLegend: d3.Selection<SVGGElement, undefined, null, undefined>;
+  ghostColorLegend: d3.Selection<SVGGElement, undefined, null, undefined>;
 
   width: number;
   height: number;
@@ -17,6 +18,7 @@ class Legend {
     this.svg = this.createSVG();
     this.symbolLegend = this.svg.append("g");
     this.labelLegend = this.svg.append("g");
+    this.ghostColorLegend = this.svg.append("g");
   }
 
   private createSVG(): d3.Selection<SVGSVGElement, undefined, null, undefined> {
@@ -34,7 +36,7 @@ class Legend {
       { label: "Neighbor", symbol: d3.symbolWye },
     ];
 
-    this.symbolLegend.attr("transform", `translate(20, 50)`);
+    this.symbolLegend.attr("transform", `translate(20, 300)`);
     this.symbolLegend
       .selectAll("path")
       .data(legends)
@@ -68,7 +70,7 @@ class Legend {
   ) {
     if (legends.length === 0 && Object.keys(colors).length === 0) return;
 
-    this.labelLegend.attr("transform", `translate(20, ${this.height / 2})`);
+    this.labelLegend.attr("transform", `translate(20, 400)`);
 
     if (!legends.length) {
       legends = Object.keys(colors!);
@@ -99,9 +101,65 @@ class Legend {
       .attr("font-size", "16px");
   }
 
-  render(legend: string[], colors: { [key: string]: string }) {
+  private renderGhostLegend(radius: number) {
+    const ghostColorScale = d3.scaleSequential(d3.interpolateViridis);
+    this.ghostColorLegend.attr("transform", `translate(10, 220)`);
+
+    const gradient = this.svg
+      .append("defs")
+      .append("linearGradient")
+      .attr("id", "ghost-gradient")
+      .attr("x1", "0%")
+      .attr("x2", "100%")
+      .attr("y1", "0%")
+      .attr("y2", "0%");
+
+    gradient
+      .selectAll("stop")
+      .data(d3.range(0, 1.01, 0.01))
+      .enter()
+      .append("stop")
+      .attr("offset", (d) => `${d * 100}%`)
+      .attr("stop-color", (d) => ghostColorScale(d));
+
+    this.ghostColorLegend
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", 20)
+      .attr("width", 150)
+      .attr("height", 20)
+      .style("fill", "url(#ghost-gradient)");
+
+    this.ghostColorLegend
+      .append("text")
+      .attr("x", 0)
+      .attr("y", 10)
+      .attr("alignment-baseline", "middle")
+      .attr("font-size", "16px")
+      .text("Ghost Color Scale");
+
+    this.ghostColorLegend
+      .append("text")
+      .attr("x", 0)
+      .attr("y", 50)
+      .attr("alignment-baseline", "middle")
+      .attr("font-size", "12px")
+      .text("0");
+
+    this.ghostColorLegend
+      .append("text")
+      .attr("x", 150)
+      .attr("y", 50)
+      .attr("alignment-baseline", "middle")
+      .attr("font-size", "12px")
+      .attr("text-anchor", "end")
+      .text(radius.toString());
+  }
+
+  render(legend: string[], colors: { [key: string]: string }, radius: number) {
     this.renderSymbolLegend();
     this.renderLabelLegend(legend, colors);
+    this.renderGhostLegend(radius);
     return this.svg.node();
   }
 

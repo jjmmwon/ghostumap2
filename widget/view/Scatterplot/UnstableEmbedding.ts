@@ -20,7 +20,7 @@ class UnstableEmbedding {
       .selectAll("path")
       .data(unstEmb)
       .join("path")
-      .attr("d", d3.symbol(d3.symbolCross).size(100))
+      .attr("d", d3.symbol(d3.symbolCross).size(250))
       .attr("transform", (d) => `translate(${xScale(d.x)},${yScale(d.y)})`)
       .attr("fill", (d) => colorScale[d.label])
       .attr("pointer-events", "all")

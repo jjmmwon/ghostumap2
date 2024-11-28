@@ -5,8 +5,13 @@ import { styleMap } from "lit-html/directives/style-map.js";
 
 import Slider from "./Slider";
 import Checkbox from "./Checkbox";
-import Selector from "./Selector";
+// import Selector from "./Selector";
 import * as d3 from "d3";
+
+const settingContainerStyle = {
+  maxWidth: "300px",
+  width: "250px",
+};
 
 const titleStyle = {
   "font-size": "2em",
@@ -20,20 +25,32 @@ const componentStyle = {
 
 const checkboxContainerStyle = {
   display: "flex",
+  "flex-direction": "row",
+  "justify-content": "space-between",
   "align-items": "center",
   "margin-bottom": "10px",
+  maxWidth: "250px",
+  width: "100%",
+};
+
+const sliderContainerStyle = {
+  display: "flex",
+  "flex-direction": "column",
+  "margin-bottom": "10px",
+  maxWidth: "250px",
+  width: "100%",
 };
 
 class Settings {
   private container: HTMLDivElement;
-  private selector: Selector;
+  // private selector: Selector;
   private sliders: Slider[];
   private checkboxes: Checkbox[];
 
   constructor() {
     this.container = document.createElement("div");
 
-    this.selector = new Selector();
+    // this.selector = new Selector();
     this.sliders = [
       new Slider("distance", "Distance", 0.01, 1, 0.01),
       new Slider("sensitivity", "Sensitivity", 0.01, 1, 0.01),
@@ -49,8 +66,9 @@ class Settings {
     const isSlider = ["distance", "sensitivity"].includes(id as string);
 
     if (isSlider && typeof value === "number") {
-      d3.select("#" + id).attr("value", value.toString());
-      d3.select("#" + id + "-value").text(value.toFixed(2));
+      // console.log("update", id, value);
+      this.sliders.find((slider) => slider.id === id)?.update(value);
+      console.log(this.sliders.find((slider) => slider.id === id));
     }
     if (
       ["show_neighbors", "show_ghosts", "show_unstables"].includes(id as string)
@@ -61,17 +79,16 @@ class Settings {
 
   render(model: AnyModel<IWidget>): HTMLDivElement {
     const template = html`
-      <div class="settings-container">
+      <div class="settings-container" style=${styleMap(settingContainerStyle)}>
         <div style=${styleMap(titleStyle)}>Settings</div>
-        <div style=${styleMap(componentStyle)}>
-          ${this.selector.render(model)}
-        </div>
         <div style=${styleMap(checkboxContainerStyle)}>
           ${this.checkboxes.map((checkbox) => checkbox.render(model))}
         </div>
-        ${this.sliders.map(
-          (slider) => html` <div>${slider.render(model)}</div> `
-        )}
+        <div style=${styleMap(sliderContainerStyle)}>
+          ${this.sliders.map(
+            (slider) => html` <div>${slider.render(model)}</div> `
+          )}
+        </div>
       </div>
     `;
 

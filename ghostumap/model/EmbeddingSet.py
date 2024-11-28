@@ -11,6 +11,8 @@ class EmbeddingSet:
         original_embedding: np.ndarray,
         ghost_embedding: np.ndarray,
         neighbors: np.ndarray,
+        r: float,
+        init_radii: np.ndarray,
         label: np.ndarray | list | None,
         title: str,
         legend: List[str] | None,
@@ -19,6 +21,9 @@ class EmbeddingSet:
         self.original_embedding = original_embedding
         self.ghost_embedding = ghost_embedding
         self.neighbors = neighbors
+        self.r = r
+        self.init_radii = init_radii
+
         self.label = label
         self.title = title
         self.legend = legend
@@ -34,8 +39,9 @@ class EmbeddingSet:
                 self.label,
             ),
             "ghost_embedding": GhostEmbedding.build_model(
-                self.ghost_embedding, self.label
+                self.ghost_embedding, self.init_radii, self.label
             ),
+            "r": self.r,
             "title": self.title,
             "legend": self.legend or self.generate_default_legend(self.label),
             "colors": self.colors or {},
