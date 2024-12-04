@@ -33,7 +33,8 @@ class Widget(anywidget.AnyWidget):
         if not os.getenv("ANYWIDGET_HMR")
         else "http://localhost:5173/widget/widget.ts?anywidget"
     )
-    _css = pathlib.Path(__file__).parent / "static" / "widget.css"
+    _css_path = pathlib.Path(__file__).parent / "static" / "widget.css"
+    _css = _css_path if _css_path.exists() else None
 
     width = traitlets.Int(300).tag(sync=True)
     height = traitlets.Int(300).tag(sync=True)
