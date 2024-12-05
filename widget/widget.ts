@@ -14,10 +14,11 @@ import {
   legendStyle,
 } from "@/widgetStyles";
 import { attachModelListener } from "@/eventHandler";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 function renderWidget({ model, el }: RenderProps<IWidget>) {
   const widget = document.createElement("div");
+
+  console.log(model.get("embedding_id"), model.get("embedding_set"));
 
   const scatterplotView = new Scatterplot(
     model.get("width"),
@@ -64,23 +65,27 @@ function renderWidget({ model, el }: RenderProps<IWidget>) {
         <div class="col-md-9 scatterplot" style=${styleMap(scatterplotStyle)}>
           <div style="display: flex; flex-direction: column; ">
             <div
-              style="font-size: 2em; font-weight: bold; margin-bottom: 10px;"
+              style="font-size: 2.5em; font-weight: bold; margin-bottom: 10px;"
+              id="rd-title"
             >
-              (${1 - model.get("distance")}, ${1 - radius})-Stable Projection
+              (${radius}, ${model.get("distance")})-Stable Projection
             </div>
 
-            <div class="projection" style=${styleMap(projectionStyle)}>
-              ${scatterplotView.render(
-                origEmb,
-                unstEmb,
-                scales,
-                updateUnstList
-              )}
+            <div
+              style="display: flex; flex-direction: row; justify-content: space-between;"
+            >
+              <div class="projection" style=${styleMap(projectionStyle)}>
+                ${scatterplotView.render(
+                  origEmb,
+                  unstEmb,
+                  scales,
+                  updateUnstList
+                )}
+              </div>
+              <div class="legend" style=${styleMap(legendStyle)}>
+                ${legendView.render(legend, colors, radius, scales)}
+              </div>
             </div>
-          </div>
-
-          <div class="legend" style=${styleMap(legendStyle)}>
-            ${legendView.render(legend, colors, radius)}
           </div>
         </div>
       </div>

@@ -25,8 +25,8 @@ class Scatterplot {
     this.groupContainer = this.svg.append("g");
 
     this.originalEmbedding = new OriginalEmbedding(this.groupContainer);
-    this.ghostEmbedding = new GhostEmbedding(this.groupContainer);
     this.neighborEmbedding = new NeighborEmbedding(this.groupContainer);
+    this.ghostEmbedding = new GhostEmbedding(this.groupContainer);
     this.unstableEmbedding = new UnstableEmbedding(this.groupContainer);
   }
 

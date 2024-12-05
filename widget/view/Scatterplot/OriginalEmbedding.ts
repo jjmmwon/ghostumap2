@@ -17,13 +17,12 @@ class OriginalEmbedding {
       .attr("id", (d) => `circle-${d.id.toString()}`)
       .attr("cx", (d) => scales.xScale(d.x))
       .attr("cy", (d) => scales.yScale(d.y))
-      .attr("r", 1)
-      .attr("fill", (d) => scales.colorScale[d.label])
+      .attr("r", 0.6)
+      .attr("fill", (d) => scales.colorScale(d.label))
       .attr("id", (d) => `circle-${d.id.toString()}`);
   }
 
   setVisibility(show: boolean, unstEmb: IOriginalPoint[]) {
-    console.log("setVisibility", show);
     this.showUnst = show;
     if (this.showUnst) {
       this.group.selectAll("circle").attr("visibility", "visible");

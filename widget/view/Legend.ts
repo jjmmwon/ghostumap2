@@ -1,4 +1,4 @@
-import type { IWidget } from "@/model";
+import type { IScale, IWidget } from "@/model";
 import { AnyModel } from "@anywidget/types";
 import * as d3 from "d3";
 
@@ -36,7 +36,7 @@ class Legend {
       { label: "Neighbor", symbol: d3.symbolWye },
     ];
 
-    this.symbolLegend.attr("transform", `translate(20, 300)`);
+    this.symbolLegend.attr("transform", `translate(20, 150)`);
     this.symbolLegend
       .selectAll("path")
       .data(legends)
@@ -46,9 +46,9 @@ class Legend {
         d3
           .symbol()
           .type((d) => d.symbol)
-          .size(150)
+          .size(200)
       )
-      .attr("transform", (d, i) => `translate(0, ${20 + i * 25})`)
+      .attr("transform", (d, i) => `translate(0, ${20 + i * 28})`)
       .attr("fill", "none")
       .attr("stroke", "black")
       .attr("stroke-width", 1);
@@ -59,36 +59,36 @@ class Legend {
       .join("text")
       .text((d) => d.label)
       .attr("x", 20)
-      .attr("y", (_, i) => 22 + i * 25)
+      .attr("y", (_, i) => 22 + i * 28)
       .attr("alignment-baseline", "middle")
-      .attr("font-size", "16px");
+      .attr("font-size", "18px");
   }
 
   private renderLabelLegend(
     legends: string[],
-    colors: { [key: string]: string }
+    colors: { [key: string]: string },
+    scales: IScale
   ) {
     if (legends.length === 0 && Object.keys(colors).length === 0) return;
 
-    this.labelLegend.attr("transform", `translate(20, 400)`);
+    this.labelLegend.attr("transform", `translate(20, 260)`);
 
     if (!legends.length) {
       legends = Object.keys(colors!);
     } else {
       colors = legends.reduce<{ [key: string]: string }>((acc, label, i) => {
-        acc[label] = d3.schemeTableau10[i];
+        acc[label] = d3.schemeTableau10[i % 10];
         return acc;
       }, {});
     }
-
     this.labelLegend
       .selectAll("circle")
       .data(legends)
       .join("circle")
       .attr("cx", 0)
-      .attr("cy", (_, i) => 10 + i * 20)
-      .attr("r", 6)
-      .attr("fill", (d) => colors![d]);
+      .attr("cy", (_, i) => 10 + i * 23)
+      .attr("r", 7)
+      .attr("fill", (d, i) => scales.colorScale(i.toString()));
 
     this.labelLegend
       .selectAll("text")
@@ -96,14 +96,16 @@ class Legend {
       .join("text")
       .text((d) => d)
       .attr("x", 15)
-      .attr("y", (_, i) => 11 + i * 20)
+      .attr("y", (_, i) => 11 + i * 23)
       .attr("alignment-baseline", "middle")
-      .attr("font-size", "16px");
+      .attr("font-size", "18px");
   }
 
   private renderGhostLegend(radius: number) {
-    const ghostColorScale = d3.scaleSequential(d3.interpolateViridis);
-    this.ghostColorLegend.attr("transform", `translate(10, 220)`);
+    const ghostColorScale = d3
+      .scaleSequential(d3.interpolateRgb("#000000", "#ffffff"))
+      .domain([0, 1]); // domain을 뒤집어서 검정->흰색으로 변경
+    this.ghostColorLegend.attr("transform", `translate(10, 80)`);
 
     const gradient = this.svg
       .append("defs")
@@ -135,7 +137,7 @@ class Legend {
       .attr("x", 0)
       .attr("y", 10)
       .attr("alignment-baseline", "middle")
-      .attr("font-size", "16px")
+      .attr("font-size", "18px")
       .text("Ghost Color Scale");
 
     this.ghostColorLegend
@@ -143,28 +145,33 @@ class Legend {
       .attr("x", 0)
       .attr("y", 50)
       .attr("alignment-baseline", "middle")
-      .attr("font-size", "12px")
+      .attr("font-size", "16px")
       .text("0");
 
     this.ghostColorLegend
       .append("text")
-      .attr("x", 150)
+      .attr("x", 160)
       .attr("y", 50)
       .attr("alignment-baseline", "middle")
-      .attr("font-size", "12px")
-      .attr("text-anchor", "end")
-      .text(radius.toString());
+      .attr("font-size", "16px")
+      .attr("text-anchor", "middle")
+      .text(`${radius.toString()} (r)`);
   }
 
-  render(legend: string[], colors: { [key: string]: string }, radius: number) {
+  render(
+    legend: string[],
+    colors: { [key: string]: string },
+    radius: number,
+    scales: IScale
+  ) {
     this.renderSymbolLegend();
-    this.renderLabelLegend(legend, colors);
+    this.renderLabelLegend(legend, colors, scales);
     this.renderGhostLegend(radius);
     return this.svg.node();
   }
 
-  update(legend: string[], colors: { [key: string]: string }) {
-    this.renderLabelLegend(legend, colors);
+  update(legend: string[], colors: { [key: string]: string }, scales: IScale) {
+    this.renderLabelLegend(legend, colors, scales);
   }
 }
 

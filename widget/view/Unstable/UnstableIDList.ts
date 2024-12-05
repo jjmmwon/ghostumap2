@@ -82,7 +82,7 @@ class UnstableIDList {
                       )}
                   />
                   <label for="unstable-${d.id}" style="margin-left: 5px;"
-                    >${d.id} (INS: ${d.instability.toFixed(2)})
+                    >${d.id}
                   </label>
                 </div>
               `

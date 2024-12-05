@@ -7,16 +7,17 @@ import UnstableIDList from "./UnstableIDList";
 
 const componentStyle = {
   "margin-top": "10px",
+  "font-size": "18px",
 };
 
 const titleStyle = {
-  "font-size": "2em",
+  "font-size": "2.5em",
   "font-weight": "bold",
 };
 
 const unstableContainerStyle = {
   maxWidth: "300px",
-  width: "250px",
+  width: "300px",
 };
 
 export default class UnstableContainer {

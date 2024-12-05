@@ -28,10 +28,10 @@ class NeighborEmbedding {
       .data(points)
       .join("path")
       .attr("pointer-events", "none")
-      .attr("stroke-width", 1)
-      .attr("d", d3.symbol(d3.symbolWye).size(200))
+      .attr("stroke-width", 2)
+      .attr("d", d3.symbol(d3.symbolWye).size(250))
       .attr("transform", (d) => `translate(${xScale(d.x)},${yScale(d.y)})`)
-      .attr("fill", (d) => colorScale[d.label])
+      .attr("fill", (d) => colorScale(d.label))
       .attr("stroke", "black");
   }
 

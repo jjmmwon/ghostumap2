@@ -7,11 +7,12 @@ class Checkbox {
 
   render(model: AnyModel<IWidget>) {
     return html`
-      <label>
+      <label style="font-size: 18px;">
         <input
           type="checkbox"
           id="${this.id}"
           .checked="${model.get(this.id)}"
+          width="100%"
           @change="${(e: Event) => {
             model.set(this.id, (e.target as HTMLInputElement).checked);
             model.save_changes();

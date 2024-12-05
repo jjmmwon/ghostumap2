@@ -11,9 +11,9 @@ class GhostEmbedding {
   }
 
   renderGhosts(id: number, ghostEmb: IGhostPoint[], scales: IScale) {
-    const points = ghostEmb.find((d) => d.id === id)?.coords || [];
-    // const label = ghostEmb.find((d) => d.id === id)?.label || "";
-    console.log(points.map((d) => d.r));
+    const ghostPoint = ghostEmb.find((d) => d.id === id);
+    const points = ghostPoint?.coords || [];
+    const label = ghostPoint?.label || "0"; // default to "0" if label is not found
 
     this.group
       .append("g")
@@ -21,9 +21,9 @@ class GhostEmbedding {
       .data(points)
       .join("path")
       .attr("pointer-events", "none")
-      .attr("stroke-width", 1)
-      .attr("d", d3.symbol(d3.symbolTriangle).size(300))
-      .attr("fill", (d) => scales.ghostColorScale(d.r))
+      .attr("stroke-width", 3)
+      .attr("d", d3.symbol(d3.symbolTriangle).size(260))
+      .attr("fill", (d) => scales.ghostColorScale(label as string)(d.r))
       .attr(
         "transform",
         (d) => `translate(${scales.xScale(d.x)},${scales.yScale(d.y)})`
@@ -46,7 +46,6 @@ class GhostEmbedding {
 
   render(ghostEmb: IGhostPoint[], scales: IScale, unstableList: number[]) {
     const [enter, exit] = arrayDifference(this.unstableList, unstableList);
-
     enter.forEach((id) => this.renderGhosts(id, ghostEmb, scales));
     exit.forEach((id) => this.removeGhosts(id));
     this.unstableList = unstableList;

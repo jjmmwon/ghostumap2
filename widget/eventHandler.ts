@@ -19,7 +19,7 @@ export function attachModelListener(
     const unstInfo = updateUnstInfo(model, unstEmb, origEmb.length);
 
     scatterplotView.updateEmbedding(origEmb, unstEmb, scales, updateUnstList);
-    legendView.update(legend, colors);
+    legendView.update(legend, colors, scales);
     settingsView.update("distance", model.get("distance"));
     unstableContainerView.update(
       unstEmb,

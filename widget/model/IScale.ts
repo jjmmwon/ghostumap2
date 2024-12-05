@@ -1,10 +1,11 @@
 import type IRange from "./IRange";
+import type { ScaleLinear, ScaleOrdinal } from "d3";
 
 interface IScale {
-  xScale: d3.ScaleLinear<number, number>;
-  yScale: d3.ScaleLinear<number, number>;
-  colorScale: { [key: string]: string };
-  ghostColorScale: d3.ScaleSequential<string, never>;
+  xScale: ScaleLinear<number, number>;
+  yScale: ScaleLinear<number, number>;
+  colorScale: ScaleOrdinal<string, string>;
+  ghostColorScale: (classValue: string) => (distance: number) => string;
   range: IRange;
 }
 

@@ -5,7 +5,7 @@ import { html, render as litRender } from "lit-html";
 import { styleMap } from "lit-html/directives/style-map.js";
 
 const sliderStyle = {
-  maxWidth: "200px",
+  maxWidth: "250px",
   width: "100%",
 };
 
@@ -13,7 +13,17 @@ const containerStyle = {
   display: "flex",
   "flex-direction": "column",
   "margin-bottom": "10px",
-  maxWidth: "250px",
+  maxWidth: "300px",
+  "font-size": "16px", // 추가된 기본 폰트 크기
+};
+
+const labelStyle = {
+  "font-size": "18px", // label 폰트 크기
+  "margin-bottom": "5px",
+};
+
+const spanStyle = {
+  "font-size": "16px", // min/max 값 폰트 크기
 };
 
 class Slider {
@@ -35,12 +45,15 @@ class Slider {
 
     const template = html`
       <div class="slider-container" style=${styleMap(containerStyle)}>
-        <label for="${this.id}" id="${this.id}-label"
+        <label
+          for="${this.id}"
+          id="${this.id}-label"
+          style=${styleMap(labelStyle)}
           >${this.label}: ${displayValue}</label
         >
 
         <div style="display: flex; justify-content: space-between;">
-          <span>0</span>
+          <span style=${styleMap(spanStyle)}>0</span>
           <input
             type="range"
             id="${this.id}"
@@ -54,7 +67,7 @@ class Slider {
               model.save_changes();
             }}"
           />
-          <span>1</span>
+          <span style=${styleMap(spanStyle)}>1</span>
         </div>
       </div>
     `;
@@ -69,6 +82,7 @@ class Slider {
     const displayValue = value.toFixed(2);
     const label = this.component.querySelector("label");
     const input = this.component.querySelector("input");
+    const rdtitle = document.getElementById("rd-title");
 
     console.log(label, input);
 
@@ -78,6 +92,12 @@ class Slider {
 
     if (input) {
       input.value = value.toString();
+    }
+    console.log(rdtitle);
+    if (rdtitle && rdtitle.textContent) {
+      rdtitle.textContent = `${
+        rdtitle.textContent.split(",")[0]
+      }, ${value})-Stable Projection`;
     }
   }
 }

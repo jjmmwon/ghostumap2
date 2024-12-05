@@ -9,12 +9,12 @@ import Checkbox from "./Checkbox";
 import * as d3 from "d3";
 
 const settingContainerStyle = {
-  maxWidth: "300px",
-  width: "250px",
+  maxWidth: "350px",
+  width: "300px",
 };
 
 const titleStyle = {
-  "font-size": "2em",
+  "font-size": "2.5em",
   "font-weight": "bold",
   "margin-bottom": "10px",
 };
@@ -29,7 +29,7 @@ const checkboxContainerStyle = {
   "justify-content": "space-between",
   "align-items": "center",
   "margin-bottom": "10px",
-  maxWidth: "250px",
+  maxWidth: "300px",
   width: "100%",
 };
 
@@ -37,7 +37,7 @@ const sliderContainerStyle = {
   display: "flex",
   "flex-direction": "column",
   "margin-bottom": "10px",
-  maxWidth: "250px",
+  maxWidth: "300px",
   width: "100%",
 };
 
@@ -53,7 +53,7 @@ class Settings {
     // this.selector = new Selector();
     this.sliders = [
       new Slider("distance", "Distance", 0.01, 1, 0.01),
-      new Slider("sensitivity", "Sensitivity", 0.01, 1, 0.01),
+      // new Slider("sensitivity", "Sensitivity", 0.01, 1, 0.01),
     ];
     this.checkboxes = [
       new Checkbox("show_unstables", "Unstables"),
