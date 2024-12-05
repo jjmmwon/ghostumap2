@@ -43,7 +43,7 @@ from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_dista
 
 from .utils import get_distance, compute_distances, drop_ghosts
 
-from .layouts import optimize_layout_euclidean
+from .layouts import optimize_layout_euclidean, optimize_layout_euclidean_v1
 from .layouts_for_BM import (
     optimize_layout_euclidean as optimize_layout_euclidean_dropping,
     optimize_layout_euclidean_original,
@@ -303,7 +303,7 @@ def simplicial_set_embedding(
             "time_with_SH": optimize_layout_euclidean_with_SH,
             "time_original_GU": optimize_layout_euclidean_for_BM_vanilla,
             "original_UMAP": optimize_layout_euclidean_original,
-        }.get(bm_type, optimize_layout_euclidean_dropping)
+        }.get(bm_type, optimize_layout_euclidean)
 
         (original_embedding, ghost_embeddings, ghost_mask), opt_time = opt_func(
             n_ghosts,
@@ -330,7 +330,7 @@ def simplicial_set_embedding(
     return original_embedding, ghost_embeddings, ghost_mask, aux_data
 
 
-class GhostUMAP(UMAP):
+class GhostUMAP2(UMAP):
     """GhostUMAP
 
     GhostUMAP is a variant of UMAP that allows for the embedding of
@@ -1150,6 +1150,7 @@ class GhostUMAP(UMAP):
         ghost_gen: float = 0.2,
         dropping: bool = True,
         init_dropping: float = 0.4,
+        bm_type: str = "None",
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1193,7 +1194,7 @@ class GhostUMAP(UMAP):
             dropping=dropping,
             init_dropping=init_dropping,
             smoothing_factor=0.9,
-            bm_type="None",
+            bm_type=bm_type,
         )
 
         if n_ghosts < 1:
@@ -1248,7 +1249,6 @@ class GhostUMAP(UMAP):
         The widget will be automatically displayed in Jupyter environments.
         """
         init_radii = _get_results().init_radii
-
         widget = Widget(
             original_embedding=self.original_embedding,
             ghost_embedding=self.ghost_embeddings,
@@ -1260,7 +1260,6 @@ class GhostUMAP(UMAP):
                 else self.get_NN_for_small_data()
             ),
             label=label,
-            # title=title,
             legend=legend,
         )
         return widget

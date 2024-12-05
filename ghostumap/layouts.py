@@ -527,7 +527,6 @@ def optimize_layout_euclidean_v1(
     The first version of the optimization function.
     It does not drop ghosts, and does not use the lazy ghost generation.
     """
-    print("v1")
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha
@@ -659,7 +658,6 @@ def optimize_layout_euclidean_v2(
     It is used to simulate the dropping ghosts.
     """
 
-    print("v2")
     dim = original_embedding.shape[1]
     alpha = initial_alpha
 

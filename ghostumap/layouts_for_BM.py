@@ -460,7 +460,6 @@ def optimize_layout_euclidean(
         mov_avg_weight,
         bm_type,
     ) = asdict(config).values()
-    print(bm_type)
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha
@@ -613,7 +612,6 @@ def optimize_layout_euclidean_with_SH(
 
     config = get_config()
     bm_type = config.bm_type
-    print(bm_type)
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha
@@ -750,7 +748,6 @@ def optimize_layout_euclidean_original(
 ):
     config = get_config()
     bm_type = config.bm_type
-    print(bm_type)
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha

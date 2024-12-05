@@ -137,6 +137,7 @@ class Widget(anywidget.AnyWidget):
         colors: dict[str, str] | None = None,
     ):
         if isinstance(embedding, dict):
+
             return [
                 EmbeddingSet(
                     original_embedding=embedding["original_embedding"],

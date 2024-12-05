@@ -16,7 +16,6 @@ class DataLoader:
 
     def _get_loader(self):
         if self.data_name in ["mnist", "fmnist", "kmnist"]:
-            os.system("sync && echo 3 > /proc/sys/vm/drop_caches")
             return MnistSeriesLoader(self.data_name)
         elif self.data_name == "celegans":
             return CelegansLoader()
