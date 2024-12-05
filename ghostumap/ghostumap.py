@@ -43,13 +43,7 @@ from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_dista
 
 from .utils import get_distance, compute_distances, drop_ghosts
 
-from .layouts import optimize_layout_euclidean, optimize_layout_euclidean_v1
-from .layouts_for_BM import (
-    optimize_layout_euclidean as optimize_layout_euclidean_dropping,
-    optimize_layout_euclidean_original,
-    optimize_layout_euclidean_with_SH,
-    optimize_layout_euclidean_v0 as optimize_layout_euclidean_for_BM_vanilla,
-)
+from .layouts import optimize_layout_euclidean
 
 from .configs import get_config as _get_config, set_config
 from .results import get_results as _get_results, set_results
@@ -273,59 +267,25 @@ def simplicial_set_embedding(
         / (np.max(embedding, 0) - np.min(embedding, 0))
     ).astype(np.float32, order="C")
 
-    bm_type = _get_config().bm_type
-
-    if bm_type == "None":
-        (original_embedding, ghost_embeddings, ghost_mask) = optimize_layout_euclidean(
-            n_ghosts,
-            embedding,
-            head,
-            tail,
-            n_epochs,
-            n_vertices,
-            epochs_per_sample,
-            a,
-            b,
-            rng_state,
-            gamma,
-            initial_alpha,
-            negative_sample_rate,
-            parallel=parallel,
-            verbose=verbose,
-            tqdm_kwds=tqdm_kwds,
-            move_other=True,
-        )
-    else:
-        opt_func = {
-            "accuracy_dropping": optimize_layout_euclidean_dropping,
-            "time_with_dropping": optimize_layout_euclidean_dropping,
-            "accuracy_SH": optimize_layout_euclidean_with_SH,
-            "time_with_SH": optimize_layout_euclidean_with_SH,
-            "time_original_GU": optimize_layout_euclidean_for_BM_vanilla,
-            "original_UMAP": optimize_layout_euclidean_original,
-        }.get(bm_type, optimize_layout_euclidean)
-
-        (original_embedding, ghost_embeddings, ghost_mask), opt_time = opt_func(
-            n_ghosts,
-            embedding,
-            head,
-            tail,
-            n_epochs,
-            n_vertices,
-            epochs_per_sample,
-            a,
-            b,
-            rng_state,
-            gamma,
-            initial_alpha,
-            negative_sample_rate,
-            parallel=parallel,
-            verbose=verbose,
-            tqdm_kwds=tqdm_kwds,
-            move_other=True,
-        )
-
-        set_results(opt_time=opt_time)
+    (original_embedding, ghost_embeddings, ghost_mask) = optimize_layout_euclidean(
+        n_ghosts,
+        embedding,
+        head,
+        tail,
+        n_epochs,
+        n_vertices,
+        epochs_per_sample,
+        a,
+        b,
+        rng_state,
+        gamma,
+        initial_alpha,
+        negative_sample_rate,
+        parallel=parallel,
+        verbose=verbose,
+        tqdm_kwds=tqdm_kwds,
+        move_other=True,
+    )
 
     return original_embedding, ghost_embeddings, ghost_mask, aux_data
 
@@ -1248,6 +1208,7 @@ class GhostUMAP2(UMAP):
 
         The widget will be automatically displayed in Jupyter environments.
         """
+
         init_radii = _get_results().init_radii
         widget = Widget(
             original_embedding=self.original_embedding,
