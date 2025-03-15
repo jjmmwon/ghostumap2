@@ -36,6 +36,7 @@ class UnstableIDList {
     updateUnstList: (idList: number[]) => void
   ): void {
     const checkedUnstables = getUnstList();
+    console.log(checkedUnstables);
     updateUnstList(
       checked
         ? [...checkedUnstables, id]

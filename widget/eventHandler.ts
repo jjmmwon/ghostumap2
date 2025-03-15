@@ -1,24 +1,25 @@
 import { AnyModel } from "@anywidget/types";
 
 import type { IWidget } from "@/model";
-import { Scatterplot, Settings, Legend, UnstableContainer } from "@/view";
+import { Settings, Legend, UnstableContainer } from "@/view";
 import { prepareEmbeddingInfo, updateUnstInfo } from "@/utils";
+import { ScatterplotRenderer } from "./rendering";
 
 export function attachModelListener(
   model: AnyModel<IWidget>,
-  scatterplotView: Scatterplot,
+  scatterplotRenderer: ScatterplotRenderer,
   legendView: Legend,
   settingsView: Settings,
   unstableContainerView: UnstableContainer,
   updateUnstList: (idList: number[]) => void
 ) {
   const handleEmbeddingChange = () => {
-    const { origEmb, unstEmb, scales, legend, colors } =
+    const { origEmb, unstEmb, ghostEmb, scales, legend, colors } =
       prepareEmbeddingInfo(model);
     updateUnstList([]);
     const unstInfo = updateUnstInfo(model, unstEmb, origEmb.length);
 
-    scatterplotView.updateEmbedding(origEmb, unstEmb, scales, updateUnstList);
+    scatterplotRenderer.update(origEmb, unstEmb, ghostEmb, scales);
     legendView.update(legend, colors, scales);
     settingsView.update("distance", model.get("distance"));
     unstableContainerView.update(
@@ -31,7 +32,7 @@ export function attachModelListener(
   };
 
   const handleParamsChange = (property: keyof IWidget) => {
-    const { origEmb, unstEmb, scales } = prepareEmbeddingInfo(model);
+    const { origEmb, unstEmb, ghostEmb, scales } = prepareEmbeddingInfo(model);
     const { numUnstables, percentUnstables } = updateUnstInfo(
       model,
       unstEmb,
@@ -39,7 +40,7 @@ export function attachModelListener(
     );
     updateUnstList([]);
 
-    scatterplotView.updateUnstEmbedding(unstEmb, scales, updateUnstList);
+    scatterplotRenderer.update(origEmb, unstEmb, ghostEmb, scales);
     settingsView.update(property, model.get(property) as number);
     unstableContainerView.update(
       unstEmb,
@@ -56,7 +57,7 @@ export function attachModelListener(
     const { unstEmb } = prepareEmbeddingInfo(model);
     const optionKey = `show_${property}` as const;
 
-    scatterplotView.setVisibility(property, model.get(optionKey), unstEmb);
+    scatterplotRenderer.updateVisibility(property, model.get(optionKey));
     settingsView.update(optionKey, model.get(optionKey));
   };
 
@@ -83,13 +84,10 @@ export function attachModelListener(
   });
 
   model.on("change:checkedUnstables", () => {
-    const { origEmb, unstEmb, ghostEmb, scales } = prepareEmbeddingInfo(model);
+    // const { origEmb, unstEmb, ghostEmb, scales } = prepareEmbeddingInfo(model);
     const unstList = model.get("checkedUnstables");
-    console.log("checkedUnstables", unstList);
 
-    unstList.length === 0
-      ? scatterplotView.resetDetail(unstEmb, scales, updateUnstList)
-      : scatterplotView.updateDetail(origEmb, ghostEmb, scales, unstList);
+    scatterplotRenderer.updateUnstList(unstList);
     unstableContainerView.updateCheckbox(unstList);
   });
 }

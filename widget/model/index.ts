@@ -4,3 +4,4 @@ export type { default as IGhostPoint } from "./IGhostPoint";
 export type { default as IUnstableInfo } from "./IUnstableInfo";
 export type { default as IWidget } from "./IWidget";
 export type { default as IScale } from "./IScale";
+export type { TEmbeddingConfig } from "./TEmbeddingConfig";

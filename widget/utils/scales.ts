@@ -21,8 +21,6 @@ export const getScales = (
     .domain([yMin * 1.1, yMax * 1.1])
     .range([height, 0]);
 
-  console.log(legend);
-
   let colorScale = d3
     .scaleOrdinal<string, string>()
     .domain(d3.range(legend.length).map(String))

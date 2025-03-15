@@ -1,5 +1,4 @@
 import type { IScale, IWidget } from "@/model";
-import { AnyModel } from "@anywidget/types";
 import * as d3 from "d3";
 
 class Legend {
