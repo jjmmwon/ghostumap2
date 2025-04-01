@@ -6,20 +6,20 @@
 ### Installation
 
 ```Bash
-git clone https://github.com/jjmmwon/rdumap.git
-cd rdumap
+git clone https://github.com/jjmmwon/ghostumap2.git
+cd ghostumap2
 hatch shell
 ```
 
 ### How to use GhostUMAP
 ```Python
-from rdumap import GhostUMAP
+from ghostumap import GhostUMAP2
 from sklearn.datasets import fetch_openml
 
 mnist = fetch_openml("mnist_784")
 X, y = mnist["data"], mnist["target"]
 
-mapper = GhostUMAP()
+mapper = GhostUMAP2()
 O, G, active_ghosts = mapper.fit_transform(X, n_ghosts=16) 
 
 mapper.visualize(label=y, legend=[str(i) for i in range(10)])
