@@ -1,29 +1,24 @@
 {
-	"include": [
-		"widget"
-	],
-	"compilerOptions": {
-		"target": "ES2020",
-		"module": "ESNext",
-		"lib": [
-			"ES2020",
-			"DOM",
-			"DOM.Iterable"
-		],
-		"skipLibCheck": true,
-		"moduleResolution": "bundler",
-		"allowImportingTsExtensions": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"noEmit": true,
-		"jsx": "react",
-		"strict": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true,
-		"baseUrl": "./",
-		"paths": {
-			"@/*": ["widget/*"]
-		}
-	}
+  "include": ["widget", "global.d.ts"],
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["@webgpu/types"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["widget/*"]
+    }
+  }
 }
