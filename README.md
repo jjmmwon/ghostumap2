@@ -5,11 +5,18 @@
 
 ### Installation
 
+GhostUMAP2 can be installed in two ways:
+
+1. Installation from Git (development version):
 ```Bash
 git clone https://github.com/jjmmwon/ghostumap2.git
 cd ghostumap2
 hatch shell
 ```
+2. Installation via pip (PyPI release version):
+```Bash
+pip install ghostumap
+```   
 
 ### How to use GhostUMAP
 ```Python
