@@ -73,6 +73,8 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     var inside: bool = false;
     var isStroke: bool = false;
     let pos = input.localPos;
+
+    var finalColor: vec4<f32> = input.color;
     var alpha: f32 = input.color.a;
 
     switch input.symbol {
@@ -89,6 +91,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         case 2u: { // Triangle
             inside = pos.y >= -1.0 && 1.73 * pos.x + 0.73 >= pos.y && -1.73 * pos.x + 0.73 >= pos.y;
             isStroke = is_inside_triangle_stroke(input.localPos, input.strokeWidth);
+
         }
         case 3u: { // Diamond
             inside = abs(pos.x) + abs(pos.y) <= 1.0;
@@ -107,7 +110,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
         discard;
     }
 
-    var finalColor: vec4<f32> = input.color;
+
     if input.strokeWidth > 0.0 && isStroke {
         finalColor = input.strokeColor;
     }

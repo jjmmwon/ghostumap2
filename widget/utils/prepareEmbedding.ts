@@ -21,13 +21,12 @@ export const prepareEmbeddingInfo = (model: AnyModel<IWidget>) => {
   const distance = model.get("distance");
   const sensitivity = model.get("sensitivity");
 
-  const scaledSens = Math.floor(sensitivity * (nGhosts - 1));
-  console.log("ghostEmb", ghostEmb);
+  const scaledSens = Math.ceil(sensitivity * (nGhosts - 1));
+  // const scaledSens = 1;
   const scaledDist =
     distance *
     (d3.max([range.xMax - range.xMin, range.yMax - range.yMin]) as number);
 
-  console.log(scaledSens, scaledDist);
   const unstEmb = origEmb.filter((d) => d.radii[scaledSens] > scaledDist);
 
   return {

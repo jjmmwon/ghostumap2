@@ -78,13 +78,10 @@ class Slider {
   }
 
   update(value: number): void {
-    console.log("update", value);
     const displayValue = value.toFixed(2);
     const label = this.component.querySelector("label");
     const input = this.component.querySelector("input");
     const rdtitle = document.getElementById("rd-title");
-
-    console.log(label, input);
 
     if (label) {
       label.textContent = `${this.label}: ${displayValue}`;
@@ -93,7 +90,6 @@ class Slider {
     if (input) {
       input.value = value.toString();
     }
-    console.log(rdtitle);
     if (rdtitle && rdtitle.textContent) {
       rdtitle.textContent = `${
         rdtitle.textContent.split(",")[0]

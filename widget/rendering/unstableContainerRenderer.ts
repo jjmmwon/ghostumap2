@@ -13,7 +13,6 @@ export function renderUnstableContainer(
   renderedUnstable: HTMLElement;
 } {
   const unstableContainerView = new UnstableContainer();
-  console.log(model.get("checkedUnstables"), "checkedUnstables");
   const renderedUnstable = unstableContainerView.render(
     unstEmb,
     unstInfo.numUnstables,

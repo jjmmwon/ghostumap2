@@ -36,7 +36,6 @@ class UnstableIDList {
     updateUnstList: (idList: number[]) => void
   ): void {
     const checkedUnstables = getUnstList();
-    console.log(checkedUnstables);
     updateUnstList(
       checked
         ? [...checkedUnstables, id]
@@ -45,8 +44,6 @@ class UnstableIDList {
   }
 
   updateCheckbox(idList: number[]): void {
-    console.log("updateCheckbox", idList);
-
     d3.selectAll(".unstable-list input").property("checked", false);
     idList.forEach((id) => {
       d3.select(`#unstable-${id}`).property("checked", true);
@@ -62,7 +59,8 @@ class UnstableIDList {
     getUnstList: () => number[],
     updateUnstList: (idList: number[]) => void
   ): void {
-    const sortedUnstEmb = unstEmb.sort((a, b) => b.instability - a.instability);
+    const sortedUnstEmb = unstEmb.sort((a, b) => b.radii[14] - a.radii[14]);
+    // const sortedUnstEmb = unstEmb.sort((a, b) => b.radii[1] - a.radii[1]);
 
     const template = html`
       <div class="unstable-list" style=${styleMap(containerStyle)}>

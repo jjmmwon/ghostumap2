@@ -23,8 +23,6 @@ import {
 async function renderWidget({ model, el }: RenderProps<IWidget>) {
   const widget = document.createElement("div");
 
-  console.log(model.get("embedding_id"), model.get("embedding_set"));
-
   const { origEmb, unstEmb, ghostEmb, scales, legend, colors, radius } =
     prepareEmbeddingInfo(model);
   const unstInfo = updateUnstInfo(model, unstEmb, origEmb.length);

@@ -32,7 +32,7 @@ class Legend {
     const legends = [
       { label: "Unstable", symbol: d3.symbolCross },
       { label: "Ghost", symbol: d3.symbolTriangle },
-      { label: "Neighbor", symbol: d3.symbolWye },
+      { label: "Neighbor", symbol: d3.symbolSquare },
     ];
 
     this.symbolLegend.attr("transform", `translate(20, 150)`);
@@ -47,7 +47,14 @@ class Legend {
           .type((d) => d.symbol)
           .size(200)
       )
-      .attr("transform", (d, i) => `translate(0, ${20 + i * 28})`)
+      .attr("transform", (d, i) => {
+        let transform = `translate(0, ${20 + i * 28})`;
+        // "Neighbor" 항목(이 경우 square)에만 90도 회전 적용
+        if (d.label === "Neighbor") {
+          transform += " rotate(45)";
+        }
+        return transform;
+      })
       .attr("fill", "none")
       .attr("stroke", "black")
       .attr("stroke-width", 1);

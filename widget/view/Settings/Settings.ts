@@ -52,7 +52,7 @@ class Settings {
 
     // this.selector = new Selector();
     this.sliders = [
-      new Slider("distance", "Distance", 0.01, 1, 0.01),
+      new Slider("distance", "Distance", 0.0, 1, 0.01),
       // new Slider("sensitivity", "Sensitivity", 0.01, 1, 0.01),
     ];
     this.checkboxes = [
@@ -66,9 +66,7 @@ class Settings {
     const isSlider = ["distance", "sensitivity"].includes(id as string);
 
     if (isSlider && typeof value === "number") {
-      // console.log("update", id, value);
       this.sliders.find((slider) => slider.id === id)?.update(value);
-      console.log(this.sliders.find((slider) => slider.id === id));
     }
     if (
       ["show_neighbors", "show_ghosts", "show_unstables"].includes(id as string)
