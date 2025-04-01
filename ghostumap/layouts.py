@@ -408,29 +408,8 @@ def optimize_layout_euclidean(
                 original_embedding, ghost_embeddings
             ) / _get_max_extent(original_embedding)
 
-        if ghost_embeddings is not None:
-            optimize_ghost_fn(
-                ghost_embeddings,
-                n_ghosts,
-                ghost_mask,
-                original_embedding.astype(np.float32),
-                original_embedding.astype(np.float32),
-                head,
-                tail,
-                n_vertices,
-                epochs_per_sample,
-                a,
-                b,
-                rng_state,
-                gamma,
-                dim,
-                move_other,
-                alpha,
-                epochs_per_negative_sample,
-                epoch_of_next_negative_sample,
-                epoch_of_next_sample,
-                n,
-            )
+        epoch_of_next_negative_sample_ghost = epoch_of_next_negative_sample.copy()
+        epoch_of_next_sample_ghost = epoch_of_next_sample.copy()
 
         optimize_real_fn(
             original_embedding,
@@ -451,6 +430,53 @@ def optimize_layout_euclidean(
             epoch_of_next_sample,
             n,
         )
+
+        # if ghost_embeddings is not None:
+        #     optimize_ghost_fn(
+        #         ghost_embeddings,
+        #         n_ghosts,
+        #         ghost_mask,
+        #         original_embedding.astype(np.float32),
+        #         original_embedding.astype(np.float32),
+        #         head,
+        #         tail,
+        #         n_vertices,
+        #         epochs_per_sample,
+        #         a,
+        #         b,
+        #         rng_state,
+        #         gamma,
+        #         dim,
+        #         move_other,
+        #         alpha,
+        #         epochs_per_negative_sample,
+        #         epoch_of_next_negative_sample,
+        #         epoch_of_next_sample,
+        #         n,
+        #     )
+        if ghost_embeddings is not None:
+            optimize_ghost_fn(
+                ghost_embeddings,
+                n_ghosts,
+                ghost_mask,
+                original_embedding.astype(np.float32),
+                original_embedding.astype(np.float32),
+                head,
+                tail,
+                n_vertices,
+                epochs_per_sample,
+                a,
+                b,
+                rng_state,
+                gamma,
+                dim,
+                move_other,
+                alpha,
+                epochs_per_negative_sample,
+                epoch_of_next_negative_sample_ghost,
+                epoch_of_next_sample_ghost,
+                n,
+            )
 
         alpha = initial_alpha * (1.0 - (float(n) / float(n_epochs)))
 

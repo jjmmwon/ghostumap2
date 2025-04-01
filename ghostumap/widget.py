@@ -1,4 +1,5 @@
 import importlib.metadata
+import json
 import pathlib
 from typing import List, TypedDict
 
@@ -33,6 +34,7 @@ class Widget(anywidget.AnyWidget):
         if not os.getenv("ANYWIDGET_HMR")
         else "http://localhost:5173/widget/widget.ts?anywidget"
     )
+    print("esm", _esm)
     _css_path = pathlib.Path(__file__).parent / "static" / "widget.css"
     _css = _css_path if _css_path.exists() else None
 
@@ -85,17 +87,19 @@ class Widget(anywidget.AnyWidget):
         self.r = r
         self.init_radii = init_radii
 
-        self.embedding_set = self._process_embedding(
-            embedding=embedding_set,
-            original_embedding=original_embedding,
-            ghost_embedding=ghost_embedding,
-            r=r,
-            init_radii=init_radii,
-            neighbors=neighbors,
-            label=label,
-            title=title,
-            legend=legend,
-        )
+        self.embedding_set = []
+        if original_embedding is not None:
+            self.embedding_set = self._process_embedding(
+                embedding=embedding_set,
+                original_embedding=original_embedding,
+                ghost_embedding=ghost_embedding,
+                r=r,
+                init_radii=init_radii,
+                neighbors=neighbors,
+                label=label,
+                title=title,
+                legend=legend,
+            )
 
     def add_embedding(
         self,
@@ -144,7 +148,7 @@ class Widget(anywidget.AnyWidget):
                     ghost_embedding=embedding["ghost_embedding"],
                     r=embedding.get("r"),
                     init_radii=embedding.get("init_radii"),
-                    neighbors=embedding["neighbors"],
+                    neighbors=embedding.get("neighbors"),
                     label=embedding.get("label"),
                     title=embedding.get("title"),
                     legend=embedding.get("legend"),
@@ -159,7 +163,7 @@ class Widget(anywidget.AnyWidget):
                     ghost_embedding=emb["ghost_embedding"],
                     r=emb.get("r"),
                     init_radii=emb.get("init_radii"),
-                    neighbors=emb["neighbors"],
+                    neighbors=emb.get("neighbors"),
                     label=emb.get("label"),
                     title=emb.get("title"),
                     legend=emb.get("legend"),
@@ -232,6 +236,53 @@ class Widget(anywidget.AnyWidget):
             if value is None:
                 raise ValueError(f"Parameter '{key}' cannot be None")
             setattr(self, key, value)
+
+    def save_state(self, file_path: str = "widget_state.json"):
+
+        def convert(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.generic):
+                return obj.item()
+            elif isinstance(obj, list):
+                return [convert(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {k: convert(v) for k, v in obj.items()}
+            else:
+                return obj
+
+        state = {
+            "width": self.width,
+            "height": self.height,
+            "legend_width": self.legend_width,
+            "legend_height": self.legend_height,
+            "sensitivity": self.sensitivity,
+            "distance": self.distance,
+            "r": self.r,
+            "embedding_set": convert(self.embedding_set),
+        }
+        with open(file_path, "w") as f:
+            json.dump(state, f)
+
+    @classmethod
+    def load_state(cls, file_path: str = "celegans.json"):
+        with open(file_path, "r") as f:
+            state = json.load(f)
+
+        # 저장된 state를 이용해 기본 인스턴스를 생성한 뒤, 속성들을 설정
+        widget = cls(
+            width=state.get("width", 600),
+            height=state.get("height", 600),
+            legend_width=state.get("legend_width", 300),
+            legend_height=state.get("legend_height", 600),
+            sensitivity=state.get("sensitivity", 0.9),
+            distance=state.get("distance", 0.1),
+            r=state.get("r", 0.1),
+            embedding_set=[],
+        )
+        widget.embedding_set = state.get("embedding_set", [])
+
+        return widget
 
     def _repr_html_(self):
         """IPython display representation"""

@@ -21,7 +21,7 @@ class Config:
     dropping: bool = field(default=True)
     init_dropping: float = field(default=0.5)
     smoothing_factor: float = field(default=0.9)
-    bm_type: Tbenchmark = field(default="None")
+    benchmark: Tbenchmark = field(default="None")
 
 
 _config: Optional[Config] = None
@@ -41,7 +41,7 @@ def set_config(
     dropping=True,
     init_dropping=0.4,
     smoothing_factor=0.9,
-    bm_type: Tbenchmark = "None",
+    benchmark: Tbenchmark = "None",
 ) -> None:
     global _config
     # if _config:
@@ -54,7 +54,7 @@ def set_config(
         dropping=dropping,
         init_dropping=init_dropping,
         smoothing_factor=smoothing_factor,
-        bm_type=bm_type,
+        benchmark=benchmark,
     )
 
 

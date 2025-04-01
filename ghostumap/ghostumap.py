@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import time
 from warnings import warn
 import joblib
@@ -44,6 +45,9 @@ from pynndescent.sparse import sparse_named_distances as pynn_sparse_named_dista
 from .utils import get_distance, compute_distances, drop_ghosts
 
 from .layouts import optimize_layout_euclidean
+from .layouts_benchmark import (
+    optimize_layout_euclidean as optimize_layout_euclidean_benchmark,
+)
 
 from .configs import get_config as _get_config, set_config
 from .results import get_results as _get_results, set_results
@@ -267,7 +271,15 @@ def simplicial_set_embedding(
         / (np.max(embedding, 0) - np.min(embedding, 0))
     ).astype(np.float32, order="C")
 
-    (original_embedding, ghost_embeddings, ghost_mask) = optimize_layout_euclidean(
+    benchmark_type = asdict(_get_config()).get("benchmark", "None")
+
+    optimize_fn = (
+        optimize_layout_euclidean
+        if benchmark_type == "None"
+        else optimize_layout_euclidean_benchmark
+    )
+
+    (original_embedding, ghost_embeddings, ghost_mask) = optimize_fn(
         n_ghosts,
         embedding,
         head,
@@ -286,6 +298,26 @@ def simplicial_set_embedding(
         tqdm_kwds=tqdm_kwds,
         move_other=True,
     )
+
+    # (original_embedding, ghost_embeddings, ghost_mask) = optimize_layout_euclidean(
+    #     n_ghosts,
+    #     embedding,
+    #     head,
+    #     tail,
+    #     n_epochs,
+    #     n_vertices,
+    #     epochs_per_sample,
+    #     a,
+    #     b,
+    #     rng_state,
+    #     gamma,
+    #     initial_alpha,
+    #     negative_sample_rate,
+    #     parallel=parallel,
+    #     verbose=verbose,
+    #     tqdm_kwds=tqdm_kwds,
+    #     move_other=True,
+    # )
 
     return original_embedding, ghost_embeddings, ghost_mask, aux_data
 
@@ -1108,9 +1140,10 @@ class GhostUMAP2(UMAP):
         r: float = 0.1,
         sensitivity: float = 1,
         ghost_gen: float = 0.2,
-        dropping: bool = True,
+        dropping: bool = False,
         init_dropping: float = 0.4,
-        bm_type: str = "None",
+        smoothing_factor: float = 0.9,
+        benchmark: str = "None",
     ):
         """
         Fit X into an embedded space with ghosts and return that transformed outputs.
@@ -1147,14 +1180,15 @@ class GhostUMAP2(UMAP):
             The indices of the ghost points in the original data.
 
         """
+
         set_config(
             r=r,
             sensitivity=sensitivity,
             ghost_gen=ghost_gen,
             dropping=dropping,
             init_dropping=init_dropping,
-            smoothing_factor=0.9,
-            bm_type=bm_type,
+            smoothing_factor=smoothing_factor,
+            benchmark=benchmark,
         )
 
         if n_ghosts < 1:

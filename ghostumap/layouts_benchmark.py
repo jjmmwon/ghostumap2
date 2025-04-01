@@ -363,7 +363,7 @@ def _optimize_ghost_layout_euclidean_single_epoch_with_dropping(
                     other_ghost[d] += -grad_d * alpha
 
 
-@measure_time("")
+# @measure_time("")
 def optimize_layout_euclidean(
     n_ghosts,
     original_embedding,
@@ -457,7 +457,7 @@ def optimize_layout_euclidean(
         ghost_gen,
         dropping,
         init_dropping,
-        mov_avg_weight,
+        smoothing_factor,
         bm_type,
     ) = asdict(config).values()
 
@@ -473,6 +473,8 @@ def optimize_layout_euclidean(
         fastmath=True,
         parallel=parallel,
     )
+
+    print("bm_type", bm_type)
 
     optimize_ghost_fn = numba.njit(
         (
@@ -566,7 +568,7 @@ def optimize_layout_euclidean(
                 ghost_embeddings,
                 ghost_mask,
                 sensitivity,
-                mov_avg_weight,
+                smoothing_factor,
             )
 
             _drop_ghosts_if_needed(
@@ -611,7 +613,7 @@ def optimize_layout_euclidean_with_SH(
     schedule = [int(n_epochs * s) for s in schedule]
 
     config = get_config()
-    bm_type = config.bm_type
+    bm_type = config.benchmark
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha
@@ -747,7 +749,7 @@ def optimize_layout_euclidean_original(
     move_other=False,
 ):
     config = get_config()
-    bm_type = config.bm_type
+    bm_type = config.benchmark
 
     dim = original_embedding.shape[1]
     alpha = initial_alpha

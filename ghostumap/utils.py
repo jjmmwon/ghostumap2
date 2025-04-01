@@ -18,6 +18,8 @@ def sample_ghosts(
 
     theta = np.random.uniform(0, 2 * np.pi, (n_points, n_samples))
     radii = np.random.uniform(r1, r2, (n_points, n_samples))
+    # radii = np.linspace(0, r2, n_samples)
+    # radii = r2
 
     dx = radii * np.cos(theta)
     dy = radii * np.sin(theta)
